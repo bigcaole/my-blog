@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": { "node": ">=20 <21" },
   "scripts": {
+    "check:prod": "npm run build && npm run preview -- --host",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
