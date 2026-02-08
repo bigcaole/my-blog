@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import PostCard from '../../components/post/PostCard.astro';
+import { getAllPosts } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  const posts = await getAllPosts();
+  const tags = new Set<string>();
+  for (const p of posts) for (const t of p.data.tags ?? []) tags.add(t);
+  return Array.from(tags).map((tag) => ({ params: { tag: encodeURIComponent(tag) } }));
+}
+
+const tagParam = Astro.params.tag ?? '';
+const decodedTag = decodeURIComponent(tagParam);
+const all = await getAllPosts();
+const posts = all.filter((p) => (p.data.tags ?? []).includes(decodedTag));
+---
+
+<BaseLayout
+  title={`标签：${decodedTag}`}
+  description={`标签「${decodedTag}」下的文章列表。`}
+  canonical={`/tags/${encodeURIComponent(decodedTag)}/`}
+>
+  <Breadcrumbs items={[{ label: '首页', href: '/' }, { label: '标签', href: '/tags/' }, { label: decodedTag }]} />
+  <div class="mt-4">
+    <SectionTitle title={`#${decodedTag}`} description={`共 ${posts.length} 篇`} barClass="border-amber-500" />
+  </div>
+
+  <div class="mt-6 grid gap-4">
+    {posts.map((post) => (
+      <PostCard post={post} />
+    ))}
+  </div>
+</BaseLayout>
+

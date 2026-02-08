@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import Badge from '../../components/ui/Badge.astro';
+import { getAllPosts, getTagCounts } from '../../utils/posts';
+
+const posts = await getAllPosts();
+const counts = getTagCounts(posts);
+const tags = Array.from(counts.entries())
+  .map(([tag, count]) => ({ tag, count }))
+  .sort((a, b) => b.count - a.count);
+---
+
+<BaseLayout title="标签" description="按标签浏览全部文章。" canonical="/tags/">
+  <SectionTitle title="标签" description="按主题快速跳转到文章列表。" barClass="border-amber-500" />
+
+  <div class="mt-6 flex flex-wrap gap-2">
+    {tags.map(({ tag, count }) => (
+      <a class="no-underline" href={`/tags/${encodeURIComponent(tag)}/`}>
+        <Badge>
+          #{tag} <span class="ml-1 opacity-70">({count})</span>
+        </Badge>
+      </a>
+    ))}
+  </div>
+</BaseLayout>
+

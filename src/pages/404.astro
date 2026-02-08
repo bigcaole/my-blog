@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Card from '../components/ui/Card.astro';
+import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
+---
+
+<BaseLayout title="404" description="页面不存在。" canonical="/404/">
+  <Card class="p-6">
+    <div class="flex items-start gap-4">
+      <div
+        class="inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white"
+        style="background: linear-gradient(135deg, var(--primary), var(--accent));"
+      >
+        <Icon name="search" />
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold tracking-tight" style="color: var(--text)">页面不存在</h1>
+        <p class="mt-2 text-sm" style="color: var(--text-muted)">
+          你访问的页面不存在或已被移动。可以回到首页，或去工具箱 / 文章列表继续浏览。
+        </p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <Button variant="primary" href="/">
+            <Icon name="home" size={16} /> 回到首页
+          </Button>
+          <Button variant="secondary" href="/posts/">
+            <Icon name="posts" size={16} /> 文章
+          </Button>
+          <Button variant="secondary" href="/tools/">
+            <Icon name="tools" size={16} /> 工具箱
+          </Button>
+        </div>
+      </div>
+    </div>
+  </Card>
+</BaseLayout>

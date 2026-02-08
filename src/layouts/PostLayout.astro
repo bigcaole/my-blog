@@ -1,0 +1,177 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import Card from '../components/ui/Card.astro';
+import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
+import SectionTitle from '../components/ui/SectionTitle.astro';
+import Badge from '../components/ui/Badge.astro';
+import Icon from '../components/ui/Icon.astro';
+import { SITE } from '../config/site';
+import { formatDate } from '../utils/date';
+import { readingTime } from '../utils/readingTime';
+import { getAllPosts, pickRelatedPosts } from '../utils/posts';
+import Toc from '../components/post/Toc.astro';
+import ShareButtons from '../components/post/ShareButtons.astro';
+import SubscribeEmbed from '../components/shared/SubscribeEmbed.astro';
+import Giscus from '../components/post/Giscus.astro';
+import PostCard from '../components/post/PostCard.astro';
+
+type Props = {
+  post: CollectionEntry<'blog'>;
+  headings: { depth: number; slug: string; text: string }[];
+  Content: any;
+};
+
+const { post, headings, Content } = Astro.props as Props;
+const rt = readingTime(post.body);
+
+const canonicalPath = `/posts/${post.slug}/`;
+const canonical = new URL(canonicalPath, SITE.url).toString();
+
+const all = await getAllPosts();
+const idx = all.findIndex((p) => p.slug === post.slug);
+const newer = idx > 0 ? all[idx - 1] : null;
+const older = idx >= 0 && idx < all.length - 1 ? all[idx + 1] : null;
+const related = pickRelatedPosts(all, post, 3);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  canonical={canonicalPath}
+  ogType="article"
+>
+  <Fragment slot="head">
+    <meta property="article:published_time" content={post.data.date.toISOString()} />
+    {(post.data.tags ?? []).map((t) => (
+      <meta property="article:tag" content={t} />
+    ))}
+  </Fragment>
+
+  <Breadcrumbs
+    items={[
+      { label: '首页', href: '/' },
+      { label: '文章', href: '/posts/' },
+      { label: post.data.title },
+    ]}
+  />
+
+  <header class="mt-4">
+    <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl" style="color: var(--text)">
+      {post.data.title}
+    </h1>
+    <p class="mt-3 max-w-3xl text-sm leading-7" style="color: var(--text-muted)">
+      {post.data.description}
+    </p>
+
+    <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-wrap items-center gap-2 text-xs" style="color: var(--text-muted)">
+        <span class="inline-flex items-center gap-1">
+          <Icon name="calendar" size={14} /> {formatDate(post.data.date, SITE.locale)}
+        </span>
+        <span class="opacity-50">·</span>
+        <span class="inline-flex items-center gap-1">
+          <Icon name="clock" size={14} /> {rt.minutes} 分钟阅读
+        </span>
+        {(post.data.tags ?? []).length ? <span class="opacity-50">·</span> : null}
+        <div class="flex flex-wrap gap-2">
+          {(post.data.tags ?? []).slice(0, 6).map((t) => (
+            <a class="no-underline" href={`/tags/${encodeURIComponent(t)}/`}>
+              <Badge>#{t}</Badge>
+            </a>
+          ))}
+        </div>
+      </div>
+      <ShareButtons url={canonical} title={post.data.title} />
+    </div>
+  </header>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_300px]">
+    <article class="prose max-w-none leading-[1.7] dark:prose-invert">
+      <Content />
+    </article>
+
+    <aside class="hidden lg:block">
+      <div class="sticky top-24 space-y-4">
+        <Card class="p-4">
+          <div class="text-sm font-semibold" style="color: var(--text)">目录</div>
+          <div class="mt-3">
+            <Toc headings={headings} />
+          </div>
+        </Card>
+
+        <Card class="p-4">
+          <div class="text-sm font-semibold" style="color: var(--text)">订阅</div>
+          <p class="mt-2 text-sm" style="color: var(--text-muted)">RSS / 邮件订阅，获取低频更新。</p>
+          <div class="mt-3">
+            <a class="text-sm hover:underline" style="color: var(--text-muted)" href={SITE.subscribe.rssPath}>
+              打开 RSS →
+            </a>
+          </div>
+        </Card>
+      </div>
+    </aside>
+  </div>
+
+  <div class="mt-6 lg:hidden">
+    <Card class="p-4">
+      <details>
+        <summary class="cursor-pointer text-sm font-semibold" style="color: var(--text)">目录</summary>
+        <div class="mt-4">
+          <Toc headings={headings} />
+        </div>
+      </details>
+    </Card>
+  </div>
+
+  <nav class="mt-10 grid gap-4 sm:grid-cols-2" aria-label="上一篇 下一篇">
+    {older ? (
+      <a class="no-underline" href={`/posts/${older.slug}/`}>
+        <Card class="p-5">
+          <div class="text-xs" style="color: var(--text-muted)">上一篇</div>
+          <div class="mt-1 text-sm font-semibold" style="color: var(--text)">{older.data.title}</div>
+          <div class="mt-2 clamp-1 text-xs" style="color: var(--text-muted)">{older.data.description}</div>
+        </Card>
+      </a>
+    ) : (
+      <Card class="p-5 opacity-60">
+        <div class="text-xs" style="color: var(--text-muted)">上一篇</div>
+        <div class="mt-1 text-sm" style="color: var(--text-muted)">没有了</div>
+      </Card>
+    )}
+
+    {newer ? (
+      <a class="no-underline" href={`/posts/${newer.slug}/`}>
+        <Card class="p-5">
+          <div class="text-xs" style="color: var(--text-muted)">下一篇</div>
+          <div class="mt-1 text-sm font-semibold" style="color: var(--text)">{newer.data.title}</div>
+          <div class="mt-2 clamp-1 text-xs" style="color: var(--text-muted)">{newer.data.description}</div>
+        </Card>
+      </a>
+    ) : (
+      <Card class="p-5 opacity-60">
+        <div class="text-xs" style="color: var(--text-muted)">下一篇</div>
+        <div class="mt-1 text-sm" style="color: var(--text-muted)">没有了</div>
+      </Card>
+    )}
+  </nav>
+
+  <section class="mt-12">
+    <SectionTitle title="相关文章" description="同标签优先（最多 3 篇）。" />
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      {related.length ? (
+        related.map((p) => <PostCard post={p} />)
+      ) : (
+        <Card class="p-5">
+          <p class="text-sm" style="color: var(--text-muted)">暂无相关文章。</p>
+        </Card>
+      )}
+    </div>
+  </section>
+
+  <div class="mt-12">
+    <SubscribeEmbed />
+  </div>
+
+  <Giscus />
+</BaseLayout>

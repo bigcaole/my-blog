@@ -1,0 +1,24 @@
+---
+type Heading = { depth: number; slug: string; text: string };
+const { headings } = Astro.props as { headings: Heading[] };
+const items = (headings ?? []).filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{items.length ? (
+  <nav aria-label="目录">
+    <ul class="space-y-2 text-sm">
+      {items.map((h) => (
+        <li class={h.depth === 3 ? 'pl-4' : ''}>
+          <a
+            class="text-[var(--text-muted)] hover:text-[var(--primary)] hover:underline"
+            href={`#${h.slug}`}
+          >
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+) : (
+  <p class="text-sm text-[var(--text-muted)]">无目录</p>
+)}

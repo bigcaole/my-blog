@@ -1,0 +1,40 @@
+---
+import { SITE } from '../../config/site';
+import Card from '../ui/Card.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+
+const cfg = SITE.subscribe.email;
+if (!cfg.enabled) {
+  return null;
+}
+---
+
+<Card class="p-5">
+  <div class="text-sm font-semibold" style="color: var(--text)">{cfg.title}</div>
+  <p class="mt-2 text-sm" style="color: var(--text-muted)">{cfg.description}</p>
+
+  {cfg.formAction ? (
+    <form class="mt-4 flex flex-col gap-2 sm:flex-row" method="post" action={cfg.formAction}>
+      <input
+        class="ui-input"
+        type="email"
+        name={cfg.emailName}
+        placeholder={cfg.placeholder}
+        required
+      />
+      <Button variant="primary" type="submit" class="h-10 sm:w-auto">
+        {cfg.buttonText} <Icon name="arrow-right" size={16} />
+      </Button>
+    </form>
+  ) : (
+    <div
+      class="mt-4 rounded-2xl border border-dashed p-4 text-sm"
+      style="border-color: var(--border); background: var(--bg-elev-2); color: var(--text-muted)"
+    >
+      这是占位表单：请在 <code>src/config/site.ts</code> 配置 <code>subscribe.email.formAction</code>。
+    </div>
+  )}
+
+  <p class="mt-3 text-xs" style="color: var(--text-muted)">{cfg.note}</p>
+</Card>

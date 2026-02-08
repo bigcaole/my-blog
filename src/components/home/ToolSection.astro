@@ -1,0 +1,59 @@
+---
+import type { ToolItem } from '../../config/site';
+import Card from '../ui/Card.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import SectionTitle from '../ui/SectionTitle.astro';
+import Badge from '../ui/Badge.astro';
+
+type Props = {
+  tools: ToolItem[];
+  limit?: number;
+};
+
+const { tools, limit = 6 } = Astro.props as Props;
+const items = tools.slice(0, limit).map((t) => ({
+  ...t,
+  href: t.status === 'active' ? `/tools/${t.slug}/` : `/tools/coming-soon/${t.slug}/`,
+}));
+---
+
+<section class="mt-14">
+  <div class="flex items-end justify-between gap-4">
+    <SectionTitle title="工具推荐" description="点开就能用的小工具（含开发中占位）。" barClass="border-emerald-500" />
+    <a class="text-sm text-[var(--text-muted)] hover:text-[var(--primary)] hover:underline" href="/tools/">
+      全部工具 →
+    </a>
+  </div>
+
+  <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {items.map((t) => (
+      <Card class="p-5">
+        <div class="flex h-full flex-col">
+          <div class="flex items-start gap-3">
+            <div
+              class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white"
+              style="background: linear-gradient(135deg, var(--primary), var(--accent));"
+            >
+              <Icon name={t.icon} />
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <div class="truncate text-sm font-semibold">{t.title}</div>
+                {t.status !== 'active' ? <Badge variant="accent">开发中</Badge> : null}
+              </div>
+              <p class="mt-1 text-sm" style="color: var(--text-muted)">{t.description}</p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex-1"></div>
+          <div class="mt-4">
+            <Button variant={t.status === 'active' ? 'primary' : 'secondary'} href={t.href}>
+              {t.status === 'active' ? '进入' : '查看'} <Icon name="arrow-right" size={16} />
+            </Button>
+          </div>
+        </div>
+      </Card>
+    ))}
+  </div>
+</section>

@@ -1,0 +1,22 @@
+---
+import SectionTitle from '../ui/SectionTitle.astro';
+import Badge from '../ui/Badge.astro';
+
+type Props = {
+  tags: Array<{ tag: string; count: number }>;
+};
+const { tags } = Astro.props as Props;
+---
+
+<section class="mt-14">
+  <SectionTitle title="标签导航" description="按主题快速跳转。" barClass="border-amber-500" />
+  <div class="mt-6 flex flex-wrap gap-2">
+    {tags.map(({ tag, count }) => (
+      <a class="no-underline" href={`/tags/${encodeURIComponent(tag)}/`}>
+        <Badge variant="muted">
+          #{tag} <span class="ml-1 opacity-70">({count})</span>
+        </Badge>
+      </a>
+    ))}
+  </div>
+</section>

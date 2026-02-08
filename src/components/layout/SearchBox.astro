@@ -1,0 +1,185 @@
+---
+import Icon from '../ui/Icon.astro';
+
+type Props = {
+  class?: string;
+};
+const extraClass = (Astro.props as Props).class ?? '';
+---
+
+<div class={`relative ${extraClass}`.trim()} data-search-root>
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elev-1)] text-[var(--text-muted)] shadow-sm hover:bg-[var(--bg-elev-2)] sm:hidden"
+      aria-label="打开搜索"
+      data-search-toggle
+    >
+      <Icon name="search" />
+    </button>
+
+    <div
+      class="hidden w-[22rem] max-w-full items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elev-2)] px-3 shadow-sm sm:flex"
+      data-search-bar
+    >
+      <Icon name="search" class="text-[var(--text-muted)]" />
+      <input
+        class="h-9 w-full bg-transparent text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none"
+        placeholder="搜索文章（标题 / 描述 / 标签）"
+        autocomplete="off"
+        spellcheck="false"
+        data-search-input
+      />
+      <kbd class="hidden rounded-md border border-[var(--border)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)] lg:block">ESC</kbd>
+    </div>
+  </div>
+
+  <!-- Mobile expandable input -->
+  <div
+    class="absolute left-0 right-0 top-11 hidden items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elev-2)] px-3 shadow-sm sm:hidden"
+    data-search-mobile
+  >
+    <Icon name="search" class="text-[var(--text-muted)]" />
+    <input
+      class="h-10 w-full bg-transparent text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none"
+      placeholder="搜索文章…"
+      autocomplete="off"
+      spellcheck="false"
+      data-search-input
+    />
+  </div>
+
+  <div
+    class="absolute left-0 right-0 top-[5.25rem] z-50 hidden overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elev-1)] shadow-lg sm:top-11"
+    data-search-dropdown
+  >
+    <div class="max-h-80 overflow-auto p-2" data-search-results></div>
+    <div class="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--text-muted)]">
+      提示：支持 ESC 关闭
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const root = document.currentScript?.previousElementSibling;
+    if (!root) return;
+
+    const toggleBtn = root.querySelector('[data-search-toggle]');
+    const mobileBar = root.querySelector('[data-search-mobile]');
+    const dropdown = root.querySelector('[data-search-dropdown]');
+    const resultsEl = root.querySelector('[data-search-results]');
+    const inputs = root.querySelectorAll('[data-search-input]');
+
+    let index = null;
+    let open = false;
+
+    function setOpen(next) {
+      open = next;
+      dropdown?.classList.toggle('hidden', !open);
+      if (!open && resultsEl) resultsEl.innerHTML = '';
+    }
+
+    function setMobileOpen(next) {
+      mobileBar?.classList.toggle('hidden', !next);
+      if (next) {
+        const i = mobileBar.querySelector('[data-search-input]');
+        i?.focus();
+      } else {
+        setOpen(false);
+      }
+    }
+
+    async function loadIndex() {
+      if (index) return index;
+      const res = await fetch('/search-index.json', { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('加载搜索索引失败');
+      index = await res.json();
+      return index;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function scoreItem(q, item) {
+      const hay = `${item.title} ${item.description} ${(item.tags || []).join(' ')}`.toLowerCase();
+      if (!hay.includes(q)) return 0;
+      let s = 1;
+      if (String(item.title || '').toLowerCase().includes(q)) s += 2;
+      if ((item.tags || []).some((t) => String(t).toLowerCase().includes(q))) s += 1;
+      return s;
+    }
+
+    function render(items) {
+      if (!resultsEl) return;
+      if (!items.length) {
+        resultsEl.innerHTML = '<div class="px-3 py-3 text-sm text-[var(--text-muted)]">没有匹配的文章</div>';
+        return;
+      }
+      resultsEl.innerHTML = items
+        .slice(0, 8)
+        .map((it) => {
+          const tags = (it.tags || [])
+            .slice(0, 3)
+            .map((t) => `<span class="ui-badge ui-badge--muted">#${escapeHtml(t)}</span>`)
+            .join(' ');
+          return `
+            <a class="block rounded-xl px-3 py-2 hover:bg-[var(--bg-elev-2)]" href="${it.url}">
+              <div class="text-sm font-medium text-[var(--text)]">${escapeHtml(it.title)}</div>
+              <div class="mt-1 clamp-1 text-xs text-[var(--text-muted)]">${escapeHtml(it.description || '')}</div>
+              <div class="mt-2 flex flex-wrap gap-1.5">${tags}</div>
+            </a>
+          `;
+        })
+        .join('');
+    }
+
+    async function onInput(value) {
+      const q = String(value || '').trim().toLowerCase();
+      if (!q) {
+        setOpen(false);
+        return;
+      }
+      try {
+        const items = await loadIndex();
+        const matches = items
+          .map((it) => ({ it, s: scoreItem(q, it) }))
+          .filter((x) => x.s > 0)
+          .sort((a, b) => b.s - a.s || String(b.it.date || '').localeCompare(String(a.it.date || '')))
+          .map((x) => x.it);
+        setOpen(true);
+        render(matches);
+      } catch {
+        setOpen(true);
+        if (resultsEl) resultsEl.innerHTML = '<div class="px-3 py-3 text-sm text-[var(--text-muted)]">搜索暂不可用，请稍后重试。</div>';
+      }
+    }
+
+    inputs.forEach((input) => {
+      input.addEventListener('input', (e) => onInput(e.target.value));
+      input.addEventListener('focus', (e) => onInput(e.target.value));
+    });
+
+    toggleBtn?.addEventListener('click', () => {
+      const visible = !mobileBar?.classList.contains('hidden');
+      setMobileOpen(!visible);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        setMobileOpen(false);
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!root.contains(e.target)) setOpen(false);
+    });
+  })();
+</script>

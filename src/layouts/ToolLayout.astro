@@ -1,0 +1,42 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '../components/ui/Breadcrumbs.astro';
+import Button from '../components/ui/Button.astro';
+import Icon from '../components/ui/Icon.astro';
+
+type Props = {
+  title: string;
+  description: string;
+  canonical?: string;
+  slug?: string;
+};
+
+const { title, description, canonical, slug } = Astro.props as Props;
+---
+
+<BaseLayout title={title} description={description} canonical={canonical} ogType="website">
+  <header class="mb-8">
+    <Breadcrumbs
+      items={[
+        { label: '首页', href: '/' },
+        { label: '工具箱', href: '/tools/' },
+        { label: title, href: slug ? `/tools/${slug}/` : undefined },
+      ]}
+    />
+
+    <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="text-3xl font-semibold tracking-tight">{title}</h1>
+        <p class="mt-2 max-w-2xl text-sm" style="color: var(--text-muted)">{description}</p>
+      </div>
+      <div class="flex gap-2">
+        <Button variant="secondary" href="/tools/">
+          <Icon name="arrow-left" size={16} /> 返回工具箱
+        </Button>
+      </div>
+    </div>
+  </header>
+
+  <slot />
+</BaseLayout>
+

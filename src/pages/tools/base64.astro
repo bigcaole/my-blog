@@ -1,0 +1,137 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import Icon from '../../components/ui/Icon.astro';
+---
+
+<ToolLayout
+  title="Base64 编码 / 解码"
+  description="支持 UTF-8 文本的 Base64 编码与解码，附复制按钮与友好错误提示。"
+  canonical="/tools/base64/"
+  slug="base64"
+>
+  <noscript>
+    <Card class="p-5">
+      <p class="text-sm" style="color: var(--text-muted)">该工具需要启用 JavaScript。</p>
+    </Card>
+  </noscript>
+
+  <Card class="p-5">
+    <div class="grid gap-4 lg:grid-cols-2">
+      <div>
+        <label class="text-xs" style="color: var(--text-muted)" for="b64-input">输入</label>
+        <textarea
+          id="b64-input"
+          class="mt-2 h-52 w-full resize-y rounded-2xl border px-3 py-2 text-sm outline-none"
+          style="border-color: var(--border); background: var(--bg-elev-2); color: var(--text);"
+          placeholder="输入要编码 / 解码的内容…"
+        ></textarea>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <Button variant="primary" type="button" class="h-10" id="b64-encode">
+            编码 <Icon name="arrow-right" size={16} />
+          </Button>
+          <Button variant="secondary" type="button" class="h-10" id="b64-decode">
+            解码 <Icon name="arrow-right" size={16} />
+          </Button>
+          <Button variant="ghost" type="button" class="h-10" id="b64-clear">清空</Button>
+        </div>
+        <p class="mt-3 text-xs" style="color: var(--text-muted)">
+          编码结果使用标准 Base64；解码时支持包含换行 / 空格的 Base64 字符串。
+        </p>
+      </div>
+
+      <div>
+        <label class="text-xs" style="color: var(--text-muted)" for="b64-output">输出</label>
+        <textarea
+          id="b64-output"
+          class="mt-2 h-52 w-full resize-y rounded-2xl border px-3 py-2 text-sm outline-none"
+          style="border-color: var(--border); background: var(--bg-elev-2); color: var(--text);"
+          placeholder="输出会显示在这里…"
+          readonly
+        ></textarea>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <Button variant="secondary" type="button" class="h-10" id="b64-copy">
+            复制输出
+          </Button>
+          <span id="b64-toast" class="hidden text-xs" style="color: var(--text-muted)">已复制</span>
+        </div>
+
+        <div id="b64-error" class="mt-4 hidden ui-alert text-sm"></div>
+      </div>
+    </div>
+  </Card>
+
+  <script is:inline>
+    const input = document.getElementById('b64-input');
+    const output = document.getElementById('b64-output');
+    const err = document.getElementById('b64-error');
+    const toast = document.getElementById('b64-toast');
+
+    const showError = (m) => {
+      if (!err) return;
+      err.textContent = m || '';
+      err.classList.toggle('hidden', !m);
+    };
+
+    const setOutput = (v) => {
+      if (output) output.value = v || '';
+    };
+
+    const utf8ToBase64 = (str) => {
+      const bytes = new TextEncoder().encode(str);
+      let bin = '';
+      for (const b of bytes) bin += String.fromCharCode(b);
+      return btoa(bin);
+    };
+
+    const base64ToUtf8 = (b64) => {
+      const cleaned = (b64 || '').replace(/\s+/g, '');
+      if (!cleaned) return '';
+      const bin = atob(cleaned);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    };
+
+    document.getElementById('b64-encode')?.addEventListener('click', () => {
+      showError('');
+      try {
+        setOutput(utf8ToBase64(input?.value || ''));
+      } catch {
+        showError('编码失败：请确认输入是有效文本。');
+      }
+    });
+
+    document.getElementById('b64-decode')?.addEventListener('click', () => {
+      showError('');
+      try {
+        setOutput(base64ToUtf8(input?.value || ''));
+      } catch {
+        showError('解码失败：Base64 格式可能不正确。');
+      }
+    });
+
+    document.getElementById('b64-clear')?.addEventListener('click', () => {
+      showError('');
+      if (input) input.value = '';
+      setOutput('');
+    });
+
+    document.getElementById('b64-copy')?.addEventListener('click', async () => {
+      showError('');
+      const text = output?.value || '';
+      if (!text) {
+        showError('没有可复制的内容。');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        toast?.classList.remove('hidden');
+        setTimeout(() => toast?.classList.add('hidden'), 1200);
+      } catch {
+        window.prompt('复制输出：', text);
+      }
+    });
+  </script>
+</ToolLayout>

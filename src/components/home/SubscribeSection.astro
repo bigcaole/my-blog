@@ -1,0 +1,27 @@
+---
+import { SITE } from '../../config/site';
+import SectionTitle from '../ui/SectionTitle.astro';
+import Card from '../ui/Card.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import SubscribeEmbed from '../shared/SubscribeEmbed.astro';
+---
+
+<section class="mt-14">
+  <SectionTitle title="订阅更新" description="RSS / 邮件订阅，让更新更可达。" barClass="border-sky-500" />
+  <div class="mt-6 grid gap-4 lg:grid-cols-[1fr_1fr]">
+    <Card class="p-5">
+      <div class="text-sm font-semibold">RSS</div>
+      <p class="mt-2 text-sm" style="color: var(--text-muted)">
+        最轻量、最可靠的订阅方式：无需注册，直接在阅读器里添加。
+      </p>
+      <div class="mt-4">
+        <Button variant="primary" href={SITE.subscribe.rssPath}>
+          <Icon name="arrow-right" size={16} /> 打开 RSS
+        </Button>
+      </div>
+    </Card>
+
+    <SubscribeEmbed />
+  </div>
+</section>

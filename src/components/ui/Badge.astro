@@ -1,0 +1,17 @@
+---
+type Props = {
+  variant?: 'primary' | 'accent' | 'muted';
+  class?: string;
+};
+const { variant = 'primary' } = Astro.props as Props;
+const extraClass = (Astro.props as Props).class ?? '';
+const variants: Record<string, string> = {
+  primary: 'ui-badge',
+  accent: 'ui-badge ui-badge--accent',
+  muted: 'ui-badge ui-badge--muted',
+};
+---
+<span class={`${variants[variant]} ${extraClass}`.trim()}>
+  <slot />
+</span>
+

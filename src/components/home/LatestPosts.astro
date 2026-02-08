@@ -1,0 +1,23 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import SectionTitle from '../ui/SectionTitle.astro';
+import PostCard from '../post/PostCard.astro';
+
+type Props = { posts: CollectionEntry<'blog'>[] };
+const { posts } = Astro.props as Props;
+---
+
+<section class="mt-14">
+  <div class="flex items-end justify-between gap-4">
+    <SectionTitle title="最新文章" description="教程 / 经验 / 随笔 / 综合。" barClass="border-indigo-500" />
+    <a class="text-sm text-[var(--text-muted)] hover:text-[var(--primary)] hover:underline" href="/posts/">
+      全部文章 →
+    </a>
+  </div>
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-2">
+    {posts.map((post) => (
+      <PostCard post={post} />
+    ))}
+  </div>
+</section>

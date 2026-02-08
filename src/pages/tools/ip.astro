@@ -1,0 +1,139 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import Icon from '../../components/ui/Icon.astro';
+import Input from '../../components/ui/Input.astro';
+---
+
+<ToolLayout
+  title="IP 信息查询"
+  description="输入 IP 查询国家/城市/ASN/ISP；留空则查询当前出口 IP。"
+  canonical="/tools/ip/"
+  slug="ip"
+>
+  <noscript>
+    <Card class="p-5">
+      <p class="text-sm" style="color: var(--text-muted)">该工具需要启用 JavaScript。</p>
+    </Card>
+  </noscript>
+
+  <Card class="p-5">
+    <form id="ip-form" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <Input id="ip-input" placeholder="留空查询本机出口 IP（或输入 8.8.8.8）" autocomplete="off" spellcheck="false" />
+      <Button variant="primary" type="submit" class="h-10 sm:w-auto">
+        <Icon name="search" size={16} /> 查询
+      </Button>
+    </form>
+
+    <p class="mt-3 text-xs" style="color: var(--text-muted)">
+      使用公共 API 查询，若失败会给出友好提示（可能因网络、API 限流或跨域导致）。
+    </p>
+
+    <div id="ip-loading" class="mt-4 hidden text-sm" style="color: var(--text-muted)">查询中…</div>
+
+    <div id="ip-error" class="mt-4 hidden ui-alert text-sm"></div>
+
+    <div id="ip-result" class="mt-4 hidden">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--bg-elev-2);">
+          <div class="text-xs" style="color: var(--text-muted)">IP</div>
+          <div class="mt-1 text-sm font-semibold" style="color: var(--text)" id="ip-r-ip">-</div>
+        </div>
+        <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--bg-elev-2);">
+          <div class="text-xs" style="color: var(--text-muted)">位置</div>
+          <div class="mt-1 text-sm font-semibold" style="color: var(--text)" id="ip-r-loc">-</div>
+        </div>
+        <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--bg-elev-2);">
+          <div class="text-xs" style="color: var(--text-muted)">ASN</div>
+          <div class="mt-1 text-sm font-semibold" style="color: var(--text)" id="ip-r-asn">-</div>
+        </div>
+        <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--bg-elev-2);">
+          <div class="text-xs" style="color: var(--text-muted)">ISP / 组织</div>
+          <div class="mt-1 text-sm font-semibold" style="color: var(--text)" id="ip-r-isp">-</div>
+        </div>
+      </div>
+    </div>
+  </Card>
+
+  <script is:inline>
+    const form = document.getElementById('ip-form');
+    const input = document.getElementById('ip-input');
+    const loading = document.getElementById('ip-loading');
+    const errorBox = document.getElementById('ip-error');
+    const result = document.getElementById('ip-result');
+
+    const rIp = document.getElementById('ip-r-ip');
+    const rLoc = document.getElementById('ip-r-loc');
+    const rAsn = document.getElementById('ip-r-asn');
+    const rIsp = document.getElementById('ip-r-isp');
+
+    function showLoading(on) {
+      loading?.classList.toggle('hidden', !on);
+    }
+
+    function showError(message) {
+      if (!errorBox) return;
+      errorBox.textContent = message || '';
+      errorBox.classList.toggle('hidden', !message);
+    }
+
+    function showResult(on) {
+      result?.classList.toggle('hidden', !on);
+    }
+
+    function setText(el, v) {
+      if (el) el.textContent = v || '-';
+    }
+
+    function normalizeIp(s) {
+      const v = String(s || '').trim();
+      return v;
+    }
+
+    async function query(ip) {
+      const target = ip ? `https://ipwho.is/${encodeURIComponent(ip)}` : 'https://ipwho.is/';
+      const res = await fetch(target, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('请求失败');
+      const data = await res.json();
+      if (data && data.success === false) {
+        throw new Error(data.message || '查询失败');
+      }
+      return data;
+    }
+
+    function render(data) {
+      setText(rIp, data.ip || '');
+      const loc = [data.country, data.region, data.city].filter(Boolean).join(' / ');
+      setText(rLoc, loc);
+
+      const asn =
+        data.connection && data.connection.asn ? String(data.connection.asn) : data.asn ? String(data.asn) : '';
+      setText(rAsn, asn ? `AS${asn.replace(/^AS/i, '')}` : '');
+
+      const isp =
+        (data.connection && (data.connection.isp || data.connection.org)) ||
+        data.isp ||
+        data.org ||
+        '';
+      setText(rIsp, String(isp));
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showError('');
+      showResult(false);
+      showLoading(true);
+      const ip = normalizeIp(input?.value || '');
+      try {
+        const data = await query(ip);
+        render(data);
+        showResult(true);
+      } catch (err) {
+        showError(err?.message || '查询失败：请稍后重试。');
+      } finally {
+        showLoading(false);
+      }
+    });
+  </script>
+</ToolLayout>

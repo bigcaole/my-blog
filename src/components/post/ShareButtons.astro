@@ -1,0 +1,45 @@
+---
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+
+const { url, title } = Astro.props as { url: string; title: string };
+
+const xUrl =
+  'https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title);
+const tgUrl =
+  'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title);
+const wbUrl =
+  'https://service.weibo.com/share/share.php?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title);
+---
+
+<div class="flex flex-wrap items-center gap-2">
+  <Button variant="secondary" type="button" class="h-9" data-copy-url={url}>
+    <Icon name="sparkles" size={16} /> 复制链接
+  </Button>
+  <Button variant="secondary" href={xUrl} target="_blank" rel="noreferrer" class="h-9">
+    <Icon name="x" size={16} /> X
+  </Button>
+  <Button variant="secondary" href={tgUrl} target="_blank" rel="noreferrer" class="h-9">
+    <Icon name="telegram" size={16} /> Telegram
+  </Button>
+  <Button variant="secondary" href={wbUrl} target="_blank" rel="noreferrer" class="h-9">
+    <Icon name="weibo" size={16} /> 微博
+  </Button>
+  <span id="copy-toast" class="hidden text-xs text-[var(--text-muted)]">已复制</span>
+</div>
+
+<script is:inline>
+  const toast = document.getElementById('copy-toast');
+  document.querySelectorAll('[data-copy-url]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-copy-url') || '';
+      try {
+        await navigator.clipboard.writeText(url);
+        toast?.classList.remove('hidden');
+        setTimeout(() => toast?.classList.add('hidden'), 1200);
+      } catch {
+        window.prompt('复制链接：', url);
+      }
+    });
+  });
+</script>

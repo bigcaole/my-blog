@@ -1,0 +1,19 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import SectionTitle from '../ui/SectionTitle.astro';
+import PostCard from '../post/PostCard.astro';
+
+type Props = {
+  posts: CollectionEntry<'blog'>[];
+};
+const { posts } = Astro.props as Props;
+---
+
+<section class="mt-14">
+  <SectionTitle title="精选推荐" description="featured 优先；否则按时间挑选。" barClass="border-fuchsia-500" />
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {posts.slice(0, 4).map((post) => (
+      <PostCard post={post} compact />
+    ))}
+  </div>
+</section>

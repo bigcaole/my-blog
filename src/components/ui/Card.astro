@@ -1,0 +1,10 @@
+---
+type Props = {
+  class?: string;
+};
+const extraClass = (Astro.props as Props).class ?? '';
+const cls = `ui-card ${extraClass}`.trim();
+---
+<div class={cls}>
+  <slot />
+</div>

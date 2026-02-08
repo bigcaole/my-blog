@@ -1,0 +1,372 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+
+    /* Theme tokens (light) */
+    --bg: #f6f7fb;
+    --bg-elev-1: #ffffff;
+    --bg-elev-2: #f1f4fa;
+    --border: rgba(15, 23, 42, 0.12);
+    --text: #0f172a;
+    --text-muted: #475569;
+    --primary: #6366f1;
+    --accent: #10b981;
+    --ring: rgba(99, 102, 241, 0.35);
+  }
+
+  .dark {
+    /* Theme tokens (dark) */
+    --bg: #0b1020;
+    --bg-elev-1: #0f172a;
+    --bg-elev-2: #111c33;
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #e6eaf2;
+    --text-muted: #a8b0c2;
+    --primary: #6366f1;
+    --accent: #10b981;
+    --ring: rgba(99, 102, 241, 0.5);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Subtle atmosphere: 2 halos + soft noise (very restrained) */
+    background-image:
+      radial-gradient(800px 500px at 20% 0%, rgba(99, 102, 241, 0.12), transparent 60%),
+      radial-gradient(700px 450px at 85% 10%, rgba(16, 185, 129, 0.10), transparent 62%),
+      repeating-linear-gradient(
+        0deg,
+        rgba(15, 23, 42, 0.02) 0px,
+        rgba(15, 23, 42, 0.02) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(900px 520px at 20% 0%, rgba(99, 102, 241, 0.10), transparent 60%),
+      radial-gradient(800px 520px at 85% 10%, rgba(16, 185, 129, 0.08), transparent 62%),
+      repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.02) 0px,
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 28%, transparent);
+    color: var(--text);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    text-decoration-color: color-mix(in srgb, var(--primary) 30%, transparent);
+    text-underline-offset: 4px;
+  }
+  a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--primary) 70%, transparent);
+  }
+}
+
+@layer components {
+  .ui-header {
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+
+  .ui-card {
+    background: var(--bg-elev-1);
+    border: 1px solid var(--border);
+    border-radius: 1rem; /* rounded-2xl */
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 10%, transparent);
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  }
+  .ui-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--text) 14%, transparent);
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  }
+  .dark .ui-card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  }
+  .dark .ui-card:hover {
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.34);
+  }
+
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding: 0 0.9rem;
+    border-radius: 1rem; /* 16px */
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: transform 150ms ease, background 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    user-select: none;
+  }
+  .ui-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+  .ui-btn:active {
+    transform: scale(0.98);
+  }
+  .ui-btn[aria-disabled='true'],
+  .ui-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .ui-btn--primary {
+    color: white;
+    border: 1px solid transparent;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 26%, transparent);
+  }
+  .ui-btn--primary:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+
+  .ui-btn--secondary {
+    color: var(--text);
+    border: 1px solid var(--border);
+    background: transparent;
+  }
+  .ui-btn--secondary:hover {
+    background: var(--bg-elev-2);
+    border-color: color-mix(in srgb, var(--primary) 18%, var(--border));
+  }
+
+  .ui-btn--ghost {
+    color: var(--text);
+    border: 1px solid transparent;
+    background: transparent;
+  }
+  .ui-btn--ghost:hover {
+    background: color-mix(in srgb, var(--bg-elev-2) 85%, transparent);
+  }
+
+  .ui-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    color: var(--primary);
+  }
+  .ui-badge--accent {
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+  .ui-badge--muted {
+    border-color: var(--border);
+    background: color-mix(in srgb, var(--bg-elev-2) 80%, transparent);
+    color: var(--text-muted);
+  }
+
+  .ui-input {
+    height: 2.5rem;
+    width: 100%;
+    border-radius: 1rem; /* 16px */
+    border: 1px solid var(--border);
+    background: var(--bg-elev-2);
+    padding: 0 0.85rem;
+    font-size: 0.875rem;
+    color: var(--text);
+    transition: box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
+  }
+  .ui-input::placeholder {
+    color: color-mix(in srgb, var(--text-muted) 80%, transparent);
+  }
+  .ui-input:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  .ui-alert {
+    border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+    background: color-mix(in srgb, var(--primary) 8%, var(--bg-elev-2));
+    color: var(--text);
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+}
+
+/* Code blocks (Shiki) */
+pre.astro-code {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+.dark pre.astro-code {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+pre.astro-code::-webkit-scrollbar {
+  height: 10px;
+}
+pre.astro-code::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 35%, transparent);
+  border-radius: 999px;
+}
+.dark pre.astro-code::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+}
+
+code {
+  border-radius: 0.5rem;
+  padding: 0.1rem 0.35rem;
+  background: color-mix(in srgb, var(--primary) 10%, var(--bg-elev-2));
+}
+.dark code {
+  background: color-mix(in srgb, var(--primary) 12%, var(--bg-elev-2));
+}
+pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Tailwind Typography tweaks: minimal + readable */
+.prose {
+  --tw-prose-body: var(--text);
+  --tw-prose-headings: var(--text);
+  --tw-prose-lead: var(--text-muted);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--text);
+  --tw-prose-counters: var(--text-muted);
+  --tw-prose-bullets: var(--text-muted);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--text-muted);
+  --tw-prose-quote-borders: color-mix(in srgb, var(--accent) 70%, var(--border));
+  --tw-prose-captions: var(--text-muted);
+  --tw-prose-code: var(--text);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.prose code::before,
+.prose code::after {
+  content: none !important;
+}
+
+.prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+.prose a:hover {
+  text-decoration-color: color-mix(in srgb, var(--primary) 85%, transparent);
+}
+
+.prose blockquote {
+  border-left: 3px solid color-mix(in srgb, var(--accent) 70%, var(--border));
+  padding-left: 1rem;
+  color: var(--text-muted);
+}
+.dark .prose blockquote {
+  color: var(--text-muted);
+}
+.prose blockquote p {
+  margin: 0;
+}
+
+.prose table {
+  width: 100%;
+  font-size: 0.95em;
+}
+.prose thead th {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  text-align: left;
+  font-weight: 600;
+}
+.prose tbody td {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  padding: 0.55rem 0;
+  vertical-align: top;
+}
+
+.prose hr {
+  border-color: var(--border);
+}
+
+@layer utilities {
+  .clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  .clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  /*
+    Compatibility shims:
+    Some legacy markup may still use Tailwind zinc/white tokens.
+    Map them to theme tokens to keep the palette strict without breaking layout.
+  */
+  .text-zinc-900,
+  .text-zinc-950,
+  .dark .dark\:text-zinc-100 {
+    color: var(--text) !important;
+  }
+  .text-zinc-600,
+  .text-zinc-500,
+  .dark .dark\:text-zinc-400,
+  .dark .dark\:text-zinc-500 {
+    color: var(--text-muted) !important;
+  }
+
+  .border-zinc-200,
+  .border-zinc-300,
+  .border-zinc-800,
+  .dark .dark\:border-zinc-800 {
+    border-color: var(--border) !important;
+  }
+
+  .bg-white,
+  .bg-zinc-50,
+  .bg-zinc-100 {
+    background-color: var(--bg-elev-1) !important;
+  }
+  .dark .dark\:bg-zinc-950 {
+    background-color: var(--bg-elev-2) !important;
+  }
+}

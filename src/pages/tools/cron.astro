@@ -1,0 +1,239 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import Icon from '../../components/ui/Icon.astro';
+import Input from '../../components/ui/Input.astro';
+---
+
+<ToolLayout
+  title="Cron 下一次执行时间"
+  description="输入 5 段 cron 表达式（分 时 日 月 周），展示本地时区近 5 次执行时间。"
+  canonical="/tools/cron/"
+  slug="cron"
+>
+  <noscript>
+    <Card class="p-5">
+      <p class="text-sm" style="color: var(--text-muted)">该工具需要启用 JavaScript。</p>
+    </Card>
+  </noscript>
+
+  <Card class="p-5">
+    <form id="cron-form" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <Input id="cron-input" placeholder="例如：*/5 * * * *" autocomplete="off" spellcheck="false" />
+      <Button variant="primary" type="submit" class="h-10 sm:w-auto">
+        <Icon name="clock" size={16} /> 计算
+      </Button>
+    </form>
+
+    <div class="mt-3 text-xs" style="color: var(--text-muted)">
+      支持：<code>*</code>、<code>*/n</code>、<code>a-b</code>、<code>a,b,c</code>、<code>a-b/n</code>。
+      周字段：<code>0-6</code>（周日=0），也接受 <code>7</code> 表示周日。
+    </div>
+
+    <div id="cron-error" class="mt-4 hidden ui-alert text-sm"></div>
+
+    <div
+      id="cron-result"
+      class="mt-4 hidden rounded-2xl border p-4"
+      style="border-color: var(--border); background: var(--bg-elev-2);"
+    >
+      <div class="text-xs" style="color: var(--text-muted)">本地时区近 5 次：</div>
+      <ol id="cron-list" class="mt-3 space-y-2 text-sm"></ol>
+      <div class="mt-3 text-xs" style="color: var(--text-muted)">从「当前时间的下一分钟」开始计算。</div>
+    </div>
+  </Card>
+
+  <script is:inline>
+    const form = document.getElementById('cron-form');
+    const input = document.getElementById('cron-input');
+    const errorBox = document.getElementById('cron-error');
+    const resultBox = document.getElementById('cron-result');
+    const list = document.getElementById('cron-list');
+
+    function showError(message) {
+      if (!errorBox) return;
+      errorBox.textContent = message || '';
+      errorBox.classList.toggle('hidden', !message);
+    }
+
+    function showResult(items) {
+      if (!resultBox || !list) return;
+      list.innerHTML = '';
+      for (const s of items) {
+        const li = document.createElement('li');
+        li.className = 'rounded-xl border px-3 py-2';
+        li.style.borderColor = 'var(--border)';
+        li.style.background = 'var(--bg-elev-1)';
+        li.textContent = s;
+        list.appendChild(li);
+      }
+      resultBox.classList.remove('hidden');
+    }
+
+    function hideResult() {
+      resultBox?.classList.add('hidden');
+      if (list) list.innerHTML = '';
+    }
+
+    function parseField(field, min, max, kind) {
+      const raw = String(field || '').trim();
+      if (!raw) throw new Error(`${kind} 字段为空`);
+
+      const all = () => {
+        const s = new Set();
+        for (let i = min; i <= max; i++) s.add(i);
+        return s;
+      };
+
+      if (raw === '*') return { set: all(), isStar: true };
+
+      const parts = raw.split(',');
+      const set = new Set();
+
+      const addRange = (start, end, step) => {
+        if ([start, end, step].some((n) => Number.isNaN(n))) throw new Error(`${kind} 字段格式不正确`);
+        if (step <= 0) throw new Error(`${kind} 字段步长必须 > 0`);
+        if (start < min || end > max || start > end) throw new Error(`${kind} 字段范围应在 ${min}-${max}`);
+        for (let v = start; v <= end; v += step) set.add(v);
+      };
+
+      for (const token of parts) {
+        const t = token.trim();
+        if (!t) continue;
+
+        const stepSplit = t.split('/');
+        const left = stepSplit[0];
+        const step = stepSplit.length === 2 ? Number(stepSplit[1]) : 1;
+        if (stepSplit.length > 2) throw new Error(`${kind} 字段格式不正确`);
+
+        if (left === '*') {
+          addRange(min, max, step);
+          continue;
+        }
+
+        const rangeSplit = left.split('-');
+        if (rangeSplit.length === 1) {
+          const v = Number(rangeSplit[0]);
+          addRange(v, v, 1);
+          continue;
+        }
+        if (rangeSplit.length === 2) {
+          addRange(Number(rangeSplit[0]), Number(rangeSplit[1]), step);
+          continue;
+        }
+        throw new Error(`${kind} 字段格式不正确`);
+      }
+
+      if (!set.size) throw new Error(`${kind} 字段没有可用值`);
+
+      let isFullRange = true;
+      for (let i = min; i <= max; i++) {
+        if (!set.has(i)) {
+          isFullRange = false;
+          break;
+        }
+      }
+      return { set, isStar: isFullRange };
+    }
+
+    function parseCron(expr) {
+      const fields = String(expr || '').trim().split(/\s+/);
+      if (fields.length !== 5) throw new Error('cron 必须是 5 段：分 时 日 月 周');
+
+      const [minF, hourF, domF, monF, dowF] = fields;
+      const minutes = parseField(minF, 0, 59, '分');
+      const hours = parseField(hourF, 0, 23, '时');
+      const dom = parseField(domF, 1, 31, '日');
+      const month = parseField(monF, 1, 12, '月');
+      const dowRaw = parseField(dowF, 0, 7, '周');
+
+      const dow = new Set();
+      for (const v of dowRaw.set) dow.add(v === 7 ? 0 : v);
+      const dowIsStar =
+        dowRaw.isStar || (dow.size === 7 && [0, 1, 2, 3, 4, 5, 6].every((v) => dow.has(v)));
+
+      return {
+        minutes: minutes.set,
+        hours: hours.set,
+        dom: dom.set,
+        month: month.set,
+        dow,
+        domIsStar: dom.isStar,
+        dowIsStar,
+      };
+    }
+
+    function matches(cron, d) {
+      const m = d.getMinutes();
+      const h = d.getHours();
+      const mon = d.getMonth() + 1;
+      const day = d.getDate();
+      const w = d.getDay(); // 0=Sun
+
+      if (!cron.minutes.has(m)) return false;
+      if (!cron.hours.has(h)) return false;
+      if (!cron.month.has(mon)) return false;
+
+      const domMatch = cron.dom.has(day);
+      const dowMatch = cron.dow.has(w);
+
+      // Vixie-cron style:
+      // - if either field is '*', the other must match
+      // - if both are restricted, match if either matches (OR)
+      if (cron.domIsStar && cron.dowIsStar) return true;
+      if (cron.domIsStar) return dowMatch;
+      if (cron.dowIsStar) return domMatch;
+      return domMatch || dowMatch;
+    }
+
+    function nextRuns(expr, count = 5) {
+      const cron = parseCron(expr);
+      const out = [];
+      const start = new Date();
+      start.setSeconds(0, 0);
+      start.setMinutes(start.getMinutes() + 1);
+
+      const maxMinutes = 1500000; // ~2.85 years
+      let cursor = new Date(start);
+
+      for (let i = 0; i < maxMinutes && out.length < count; i++) {
+        if (matches(cron, cursor)) out.push(new Date(cursor));
+        cursor.setMinutes(cursor.getMinutes() + 1);
+      }
+
+      if (out.length < count) {
+        throw new Error('在合理时间范围内未找到足够的执行时间（表达式可能过于稀疏或不可达）。');
+      }
+      return out;
+    }
+
+    const fmt = new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      showError('');
+      hideResult();
+      const expr = String(input?.value || '').trim();
+      if (!expr) {
+        showError('请输入 cron 表达式，例如：*/5 * * * *');
+        return;
+      }
+      try {
+        const runs = nextRuns(expr, 5).map((d) => fmt.format(d));
+        showResult(runs);
+      } catch (err) {
+        showError(err?.message || '计算失败：请检查表达式格式。');
+      }
+    });
+
+    if (input) input.value = '*/5 * * * *';
+  </script>
+</ToolLayout>

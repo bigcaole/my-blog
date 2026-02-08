@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE } from '../../config/site';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import Icon from '../../components/ui/Icon.astro';
+import Badge from '../../components/ui/Badge.astro';
+
+const tools = SITE.tools.map((t) => ({
+  ...t,
+  href: t.status === 'active' ? `/tools/${t.slug}/` : `/tools/coming-soon/${t.slug}/`,
+}));
+---
+
+<BaseLayout title="工具箱" description="工具型站点：可立即使用的小工具集合。" canonical="/tools/">
+  <SectionTitle title="工具箱" description="极简但有层次：输入、按钮、结果与提示都尽量清晰。" barClass="border-emerald-500" />
+
+  <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {tools.map((t) => (
+      <Card class="p-5">
+        <div class="flex h-full flex-col">
+          <div class="flex items-start gap-3">
+            <div
+              class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white"
+              style="background: linear-gradient(135deg, var(--primary), var(--accent));"
+            >
+              <Icon name={t.icon} />
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h2 class="truncate text-sm font-semibold">{t.title}</h2>
+                {t.status !== 'active' ? <Badge variant="accent">开发中</Badge> : null}
+              </div>
+              <p class="mt-1 text-sm" style="color: var(--text-muted)">{t.description}</p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex-1"></div>
+          <div class="mt-4 flex gap-2">
+            <Button variant="primary" href={t.href}>
+              {t.status === 'active' ? '打开' : '查看'} <Icon name="arrow-right" size={16} />
+            </Button>
+            <Button variant="secondary" href={t.href}>
+              详情
+            </Button>
+          </div>
+        </div>
+      </Card>
+    ))}
+  </div>
+</BaseLayout>

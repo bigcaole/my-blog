@@ -1,0 +1,38 @@
+---
+type Variant = 'primary' | 'secondary' | 'ghost';
+
+type Props = {
+  variant?: Variant;
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+  disabled?: boolean;
+};
+
+const {
+  variant = 'secondary',
+  href,
+  type = 'button',
+  disabled = false,
+  class: extraClass = '',
+  ...rest
+} = Astro.props as Props & Record<string, any>;
+
+const base = 'ui-btn';
+const variants: Record<Variant, string> = {
+  primary: 'ui-btn--primary',
+  secondary: 'ui-btn--secondary',
+  ghost: 'ui-btn--ghost',
+};
+
+const cls = `${base} ${variants[variant]} ${extraClass}`.trim();
+---
+{href ? (
+  <a class={cls} href={href} aria-disabled={disabled} {...rest}>
+    <slot />
+  </a>
+) : (
+  <button class={cls} type={type} disabled={disabled} {...rest}>
+    <slot />
+  </button>
+)}

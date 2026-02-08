@@ -1,0 +1,72 @@
+---
+import Icon from '../ui/Icon.astro';
+---
+
+<button
+  id="theme-toggle"
+  class="ui-btn ui-btn--secondary h-9 px-3 text-[var(--text-muted)] hover:text-[var(--primary)]"
+  type="button"
+  aria-label="切换主题"
+  title="切换主题：跟随系统 / 深色 / 浅色"
+>
+  <span class="inline-flex items-center" id="theme-icon">
+    <span data-theme-icon="system" class="hidden"><Icon name="monitor" size={16} /></span>
+    <span data-theme-icon="dark" class="hidden"><Icon name="moon" size={16} /></span>
+    <span data-theme-icon="light" class="hidden"><Icon name="sun" size={16} /></span>
+  </span>
+  <span class="text-xs" id="theme-label">主题</span>
+</button>
+
+<script is:inline>
+  const storageKey = 'theme-preference';
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const btn = document.getElementById('theme-toggle');
+  const label = document.getElementById('theme-label');
+  const iconRoot = document.getElementById('theme-icon');
+
+  function getPreference() {
+    return localStorage.getItem(storageKey) || 'system';
+  }
+
+  function resolveTheme(pref) {
+    if (pref === 'dark') return 'dark';
+    if (pref === 'light') return 'light';
+    return media.matches ? 'dark' : 'light';
+  }
+
+  function render(pref) {
+    if (label) label.textContent = pref === 'system' ? '跟随' : pref === 'dark' ? '深色' : '浅色';
+    iconRoot?.querySelectorAll('[data-theme-icon]')?.forEach((n) => n.classList.add('hidden'));
+    const key = pref === 'system' ? 'system' : pref;
+    iconRoot?.querySelector(`[data-theme-icon="${key}"]`)?.classList.remove('hidden');
+  }
+
+  function apply(pref) {
+    const resolved = resolveTheme(pref);
+    document.documentElement.classList.toggle('dark', resolved === 'dark');
+    document.documentElement.dataset.theme = resolved;
+
+    render(pref);
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { preference: pref, resolvedTheme: resolved } }));
+  }
+
+  function cycle(pref) {
+    if (pref === 'system') return 'dark';
+    if (pref === 'dark') return 'light';
+    return 'system';
+  }
+
+  btn?.addEventListener('click', () => {
+    const next = cycle(getPreference());
+    localStorage.setItem(storageKey, next);
+    apply(next);
+  });
+
+  media.addEventListener('change', () => {
+    const pref = getPreference();
+    if (pref === 'system') apply(pref);
+  });
+
+  apply(getPreference());
+</script>

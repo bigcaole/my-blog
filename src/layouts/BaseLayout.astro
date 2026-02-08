@@ -1,0 +1,90 @@
+---
+import { SITE } from '../config/site';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import '../styles/global.css';
+
+type Props = {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+};
+
+const {
+  title = SITE.name,
+  description = SITE.description,
+  ogType = 'website',
+} = Astro.props as Props;
+
+const canonicalInput = (Astro.props as Props).canonical;
+const canonical = canonicalInput
+  ? canonicalInput.startsWith('http')
+    ? canonicalInput
+    : new URL(canonicalInput, SITE.url).toString()
+  : new URL(Astro.url.pathname, SITE.url).toString();
+
+const fullTitle = title === SITE.name ? title : `${title} · ${SITE.name}`;
+
+const ogImage =
+  (Astro.props as Props).ogImage ??
+  (SITE.seo.ogImage ? new URL(SITE.seo.ogImage, SITE.url).toString() : undefined);
+
+const twitterCard = ogImage ? 'summary_large_image' : 'summary';
+const rssUrl = new URL(SITE.subscribe.rssPath, SITE.url).toString();
+---
+
+<!doctype html>
+<html lang={SITE.locale} class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F6F7FB" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B1020" media="(prefers-color-scheme: dark)" />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.name} href={rssUrl} />
+
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={SITE.locale} />
+    {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+
+    <meta name="twitter:card" content={twitterCard} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {SITE.seo.twitterHandle ? <meta name="twitter:site" content={SITE.seo.twitterHandle} /> : null}
+    {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+
+    <link rel="icon" href="/favicon.svg" />
+
+    <!-- no-flash theme: apply class before first paint -->
+    <script is:inline>
+      (function () {
+        const storageKey = 'theme-preference';
+        const pref = localStorage.getItem(storageKey) || 'system';
+        const media = window.matchMedia('(prefers-color-scheme: dark)');
+        const resolved =
+          pref === 'dark' ? 'dark' : pref === 'light' ? 'light' : media.matches ? 'dark' : 'light';
+        document.documentElement.classList.toggle('dark', resolved === 'dark');
+        document.documentElement.dataset.theme = resolved;
+      })();
+    </script>
+
+    <slot name="head" />
+  </head>
+  <body class="min-h-full">
+    <Header />
+    <main class="mx-auto w-full max-w-6xl px-4 py-10">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

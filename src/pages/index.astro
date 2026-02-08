@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config/site';
+import { formatDate } from '../utils/date';
+import { getAllPosts, getFeaturedPosts, getTagCounts } from '../utils/posts';
+import Hero from '../components/home/Hero.astro';
+import ToolSection from '../components/home/ToolSection.astro';
+import LatestPosts from '../components/home/LatestPosts.astro';
+import FeaturedPosts from '../components/home/FeaturedPosts.astro';
+import TagCloud from '../components/home/TagCloud.astro';
+import SubscribeSection from '../components/home/SubscribeSection.astro';
+
+const posts = await getAllPosts();
+const latest = posts.slice(0, 6);
+
+const featured = getFeaturedPosts(posts);
+const featuredOrFallback = (featured.length ? featured : posts).slice(0, 4);
+
+const tagCounts = getTagCounts(posts);
+const tags = Array.from(tagCounts.entries())
+  .map(([tag, count]) => ({ tag, count }))
+  .sort((a, b) => b.count - a.count);
+
+const activeToolCount = SITE.tools.filter((t) => t.status === 'active').length;
+const lastUpdated = posts[0]?.data.date ? formatDate(posts[0].data.date, SITE.locale) : '—';
+---
+
+<BaseLayout title={SITE.name} description={SITE.description} canonical="/">
+  <Hero
+    stats={[
+      { label: '文章数量', value: String(posts.length) },
+      { label: '标签数量', value: String(tagCounts.size) },
+      { label: '工具数量', value: `${activeToolCount}/${SITE.tools.length}` },
+      { label: '最后更新', value: lastUpdated },
+    ]}
+  />
+
+  <ToolSection tools={SITE.tools} limit={6} />
+  <LatestPosts posts={latest} />
+  <FeaturedPosts posts={featuredOrFallback} />
+  <TagCloud tags={tags} />
+  <SubscribeSection />
+</BaseLayout>
+

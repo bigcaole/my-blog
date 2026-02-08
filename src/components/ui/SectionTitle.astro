@@ -1,0 +1,23 @@
+---
+type Props = {
+  title: string;
+  description?: string;
+  class?: string;
+  barClass?: string;
+};
+
+const { title, description } = Astro.props as Props;
+const extraClass = (Astro.props as Props).class ?? '';
+const barClass = (Astro.props as Props).barClass ?? '';
+---
+<div class={`flex items-start gap-3 ${extraClass}`.trim()}>
+  <div
+    class={`mt-1 h-5 w-1.5 rounded-full ${barClass}`.trim()}
+    style="background: linear-gradient(180deg, var(--primary), var(--accent));"
+    aria-hidden="true"
+  ></div>
+  <div class="min-w-0">
+    <h2 class="text-lg font-semibold tracking-tight">{title}</h2>
+    {description ? <p class="mt-1 text-sm" style="color: var(--text-muted);">{description}</p> : null}
+  </div>
+</div>

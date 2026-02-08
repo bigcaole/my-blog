@@ -1,0 +1,23 @@
+---
+type Crumb = { label: string; href?: string };
+type Props = { items: Crumb[]; class?: string };
+const { items } = Astro.props as Props;
+const extraClass = (Astro.props as Props).class ?? '';
+---
+
+<nav class={`text-sm ${extraClass}`.trim()} aria-label="面包屑">
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1" style="color: var(--text-muted)">
+    {items.map((c, idx) => (
+      <li class="inline-flex items-center gap-x-2">
+        {c.href ? (
+          <a class="hover:text-[var(--primary)] hover:underline" href={c.href}>
+            {c.label}
+          </a>
+        ) : (
+          <span style="color: var(--text)">{c.label}</span>
+        )}
+        {idx < items.length - 1 ? <span class="opacity-50">/</span> : null}
+      </li>
+    ))}
+  </ol>
+</nav>

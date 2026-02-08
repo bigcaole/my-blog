@@ -1,0 +1,43 @@
+---
+import ToolLayout from '../../../layouts/ToolLayout.astro';
+import { SITE } from '../../../config/site';
+import Button from '../../../components/ui/Button.astro';
+import Icon from '../../../components/ui/Icon.astro';
+import Card from '../../../components/ui/Card.astro';
+
+export async function getStaticPaths() {
+  const slugs = SITE.tools.filter((t) => t.status === 'coming_soon').map((t) => t.slug);
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug ?? '';
+const tool = SITE.tools.find((t) => t.slug === slug);
+const title = tool ? tool.title : '开发中';
+const description = tool ? tool.description : '该工具正在开发中。';
+---
+
+<ToolLayout title={title} description={description} canonical={`/tools/coming-soon/${slug}/`}>
+  <Card class="p-6">
+    <div class="flex items-center gap-3">
+      <span
+        class="inline-flex h-10 w-10 items-center justify-center rounded-2xl text-white"
+        style="background: linear-gradient(135deg, var(--primary), var(--accent));"
+      >
+        <Icon name={(tool?.icon ?? 'tools')} />
+      </span>
+      <div>
+        <div class="text-sm font-semibold">开发中</div>
+        <div class="mt-1 text-sm" style="color: var(--text-muted)">这个工具暂未上线，后续会补齐可用版本。</div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-2">
+      <Button variant="primary" href="/tools/">
+        <Icon name="arrow-left" size={16} /> 返回工具箱
+      </Button>
+      <Button variant="secondary" href="/posts/">
+        <Icon name="posts" size={16} /> 去看文章
+      </Button>
+    </div>
+  </Card>
+</ToolLayout>

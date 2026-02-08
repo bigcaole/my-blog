@@ -1,0 +1,71 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Card from '../ui/Card.astro';
+import Badge from '../ui/Badge.astro';
+import Icon from '../ui/Icon.astro';
+import { formatDate } from '../../utils/date';
+import { readingTime } from '../../utils/readingTime';
+import { SITE } from '../../config/site';
+
+type Props = {
+  post: CollectionEntry<'blog'>;
+  compact?: boolean;
+};
+
+const { post, compact = false } = Astro.props as Props;
+const url = `/posts/${post.slug}/`;
+const rt = readingTime(post.body);
+const dateText = formatDate(post.data.date, SITE.locale);
+const tags = post.data.tags ?? [];
+---
+
+<a
+  href={url}
+  class="no-underline"
+  data-post-card
+  data-date={post.data.date.toISOString()}
+  data-tags={tags.join('|')}
+>
+  <Card class={`p-5 ${compact ? '' : ''}`.trim()}>
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <h3 class="truncate text-base font-semibold tracking-tight">
+            {post.data.title}
+          </h3>
+          {post.data.featured ? <Badge variant="accent">精选</Badge> : null}
+        </div>
+        {!compact ? (
+          <p class="mt-2 clamp-2 text-sm leading-6" style="color: var(--text-muted)">
+            {post.data.description}
+          </p>
+        ) : (
+          <p class="mt-2 clamp-2 text-sm" style="color: var(--text-muted)">{post.data.description}</p>
+        )}
+      </div>
+      <span class="mt-0.5 shrink-0" style="color: var(--text-muted)">
+        <Icon name="arrow-right" size={16} />
+      </span>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-2 text-xs" style="color: var(--text-muted)">
+      <span class="inline-flex items-center gap-1">
+        <Icon name="calendar" size={14} /> {dateText}
+      </span>
+      <span class="opacity-50">·</span>
+      <span class="inline-flex items-center gap-1">
+        <Icon name="clock" size={14} /> {rt.minutes} 分钟
+      </span>
+    </div>
+
+    {tags.length ? (
+      <div class="mt-3 flex flex-wrap gap-2">
+        {tags.slice(0, compact ? 2 : 4).map((t) => (
+          <Badge variant="primary">
+            <Icon name="hash" size={12} class="opacity-70" /> {t}
+          </Badge>
+        ))}
+      </div>
+    ) : null}
+  </Card>
+</a>

@@ -1,0 +1,83 @@
+---
+import { SITE } from '../../config/site';
+import Card from '../ui/Card.astro';
+
+const g = SITE.giscus;
+const configured =
+  g.enabled &&
+  g.repo &&
+  g.repoId &&
+  g.category &&
+  g.categoryId &&
+  !g.repo.includes('OWNER/REPO') &&
+  g.repoId !== 'REPO_ID' &&
+  g.categoryId !== 'CATEGORY_ID';
+---
+
+{configured ? (
+  <section class="mt-12">
+    <Card class="p-4">
+      <script
+        src="https://giscus.app/client.js"
+        data-repo={g.repo}
+        data-repo-id={g.repoId}
+        data-category={g.category}
+        data-category-id={g.categoryId}
+        data-mapping={g.mapping}
+        data-strict={g.strict}
+        data-reactions-enabled={g.reactionsEnabled}
+        data-emit-metadata={g.emitMetadata}
+        data-input-position={g.inputPosition}
+        data-theme="preferred_color_scheme"
+        data-lang={g.lang}
+        data-loading={g.loading}
+        crossorigin="anonymous"
+        async
+      ></script>
+    </Card>
+
+    <script is:inline define:vars={{ lightTheme: g.themeLight, darkTheme: g.themeDark }}>
+      const giscusOrigin = 'https://giscus.app';
+
+      function resolvedTheme() {
+        return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      }
+
+      function postTheme(themeName) {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return false;
+        const theme = themeName === 'dark' ? darkTheme : lightTheme;
+        iframe.contentWindow?.postMessage({ giscus: { setConfig: { theme } } }, giscusOrigin);
+        return true;
+      }
+
+      function syncTheme() {
+        return postTheme(resolvedTheme());
+      }
+
+      window.addEventListener('themechange', (e) => {
+        const t = e?.detail?.resolvedTheme;
+        if (t === 'dark' || t === 'light') postTheme(t);
+        else syncTheme();
+      });
+
+      // Giscus iframe may mount after our script; observe once and sync.
+      const obs = new MutationObserver(() => {
+        if (syncTheme()) obs.disconnect();
+      });
+      obs.observe(document.documentElement, { subtree: true, childList: true });
+
+      // Best-effort on first paint.
+      syncTheme();
+    </script>
+  </section>
+) : (
+  <section class="mt-12">
+    <Card class="p-5">
+      <p class="text-sm" style="color: var(--text-muted)">
+        评论区未启用或未配置。请在 <code>src/config/site.ts</code> 填写 Giscus 的
+        <code>repo</code> / <code>repoId</code> / <code>category</code> / <code>categoryId</code>。
+      </p>
+    </Card>
+  </section>
+)}
