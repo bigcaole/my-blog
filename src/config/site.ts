@@ -63,7 +63,9 @@ const defaults: SiteConfig = {
   name: '极简工具站',
   slogan: '极简但有层次',
   description: '一个极简 + 工具型的个人博客：教程 / 经验 / 随笔 / 综合。',
-  url: 'https://YOUR_DOMAIN',
+  // 必须是合法 URL，否则构建期生成 canonical / og:url 时会直接失败
+  // 请改成你的实际域名，例如：https://blog.example.com
+  url: 'https://example.com',
   locale: 'zh-CN',
   author: { name: '0emo' },
   nav: [

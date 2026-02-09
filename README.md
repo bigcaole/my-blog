@@ -105,6 +105,8 @@ featured: true
 - Giscus 配置（repo/category 等）
 - 订阅配置（RSS 路径、邮件订阅表单占位）
 
+建议你尽早把 `src/config/site.ts` 里的 `url` 改成你的真实站点域名（必须是合法 URL，例如 `https://blog.example.com`），否则构建期生成 `canonical/og:url` 可能会失败。
+
 ## “管理面板”式写作（无需本地改文件）
 
 这个项目是 **Astro 静态站**：文章与配置最终都会变成构建产物（`dist/`），所以“想让公网看到更新”本质上仍然需要一次构建。
