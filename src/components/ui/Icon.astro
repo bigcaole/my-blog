@@ -1,34 +1,8 @@
 ---
-export type IconName =
-  | "sparkles"
-  | "search"
-  | "menu"
-  | "x"
-  | "sun"
-  | "moon"
-  | "github"
-  | "twitter"
-  | "telegram"
-  | "rss"
-  | "home"
-  | "file-text"
-  | "tag"
-  | "wrench"
-  | "arrow-right"
-  | "arrow-left"
-  | "chevron-down"
-  | "chevron-up"
-  | "external-link"
-  | "copy"
-  | "check";
-
-export interface Props {
-  name: IconName | (string & {});
-  size?: number | string;
-  class?: string;
-  strokeWidth?: number | string;
-  label?: string;
-}
+/**
+ * Minimal inline icon component (no external deps).
+ * Note: keep frontmatter as plain JS to avoid build tool TS parsing issues.
+ */
 
 const {
   name,
@@ -36,11 +10,9 @@ const {
   class: className = "",
   strokeWidth = 1.8,
   label,
-} = Astro.props as Props;
+} = Astro.props;
 
-type IconDef = { viewBox: string; body: string };
-
-const ICONS: Record<string, IconDef> = {
+const ICONS = {
   sparkles: {
     viewBox: "0 0 24 24",
     body: [
@@ -51,18 +23,13 @@ const ICONS: Record<string, IconDef> = {
   },
   search: {
     viewBox: "0 0 24 24",
-    body: [
-      '<circle cx="11" cy="11" r="7"/>',
-      '<path d="M20 20l-3.5-3.5"/>',
-    ].join(""),
+    body: ['<circle cx="11" cy="11" r="7"/>', '<path d="M20 20l-3.5-3.5"/>'].join(""),
   },
   menu: {
     viewBox: "0 0 24 24",
-    body: [
-      '<path d="M4 7h16"/>',
-      '<path d="M4 12h16"/>',
-      '<path d="M4 17h16"/>',
-    ].join(""),
+    body: ['<path d="M4 7h16"/>', '<path d="M4 12h16"/>', '<path d="M4 17h16"/>'].join(
+      ""
+    ),
   },
   x: {
     viewBox: "0 0 24 24",
@@ -103,11 +70,7 @@ const ICONS: Record<string, IconDef> = {
   },
   rss: {
     viewBox: "0 0 24 24",
-    body: [
-      '<path d="M4 11a9 9 0 0 1 9 9"/>',
-      '<path d="M4 4a16 16 0 0 1 16 16"/>',
-      '<circle cx="5" cy="19" r="1"/>',
-    ].join(""),
+    body: ['<path d="M4 11a9 9 0 0 1 9 9"/>', '<path d="M4 4a16 16 0 0 1 16 16"/>', '<circle cx="5" cy="19" r="1"/>'].join(""),
   },
   home: {
     viewBox: "0 0 24 24",
@@ -139,9 +102,7 @@ const ICONS: Record<string, IconDef> = {
   },
   "arrow-right": {
     viewBox: "0 0 24 24",
-    body: ['<path d="M5 12h14"/>', '<path d="M13 6l6 6-6 6"/>'].join(
-      ""
-    ),
+    body: ['<path d="M5 12h14"/>', '<path d="M13 6l6 6-6 6"/>'].join(""),
   },
   "arrow-left": {
     viewBox: "0 0 24 24",
@@ -157,18 +118,15 @@ const ICONS: Record<string, IconDef> = {
   },
   "external-link": {
     viewBox: "0 0 24 24",
-    body: [
-      '<path d="M14 3h7v7"/>',
-      '<path d="M10 14L21 3"/>',
-      '<path d="M21 14v7H3V3h7"/>',
-    ].join(""),
+    body: ['<path d="M14 3h7v7"/>', '<path d="M10 14L21 3"/>', '<path d="M21 14v7H3V3h7"/>'].join(
+      ""
+    ),
   },
   copy: {
     viewBox: "0 0 24 24",
-    body: [
-      '<rect x="9" y="9" width="13" height="13" rx="2"/>',
-      '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
-    ].join(""),
+    body: ['<rect x="9" y="9" width="13" height="13" rx="2"/>', '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'].join(
+      ""
+    ),
   },
   check: {
     viewBox: "0 0 24 24",
@@ -176,7 +134,7 @@ const ICONS: Record<string, IconDef> = {
   },
 };
 
-const icon = ICONS[name] ?? ICONS.sparkles;
+const icon = ICONS[name] || ICONS.sparkles;
 const ariaAttrs = label ? { role: "img", "aria-label": label } : { "aria-hidden": "true" };
 ---
 
@@ -194,3 +152,4 @@ const ariaAttrs = label ? { role: "img", "aria-label": label } : { "aria-hidden"
   {...ariaAttrs}
   set:html={icon.body}
 ></svg>
+
