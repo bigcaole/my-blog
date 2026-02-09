@@ -18,6 +18,7 @@ const extraClass = (Astro.props as Props).class ?? '';
       <Icon name="search" />
     </button>
 
+    <!-- Desktop inline search -->
     <div
       class="hidden w-[22rem] max-w-full items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elev-2)] px-3 shadow-sm sm:flex"
       data-search-bar
@@ -34,9 +35,9 @@ const extraClass = (Astro.props as Props).class ?? '';
     </div>
   </div>
 
-  <!-- Mobile expandable input -->
+  <!-- Mobile expandable search: fixed full-width so it won't be constrained by the icon button width -->
   <div
-    class="absolute left-0 right-0 top-11 hidden items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elev-2)] px-3 shadow-sm sm:hidden"
+    class="fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+3.75rem)] z-[60] hidden items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elev-2)] px-3 shadow-lg sm:hidden"
     data-search-mobile
   >
     <Icon name="search" class="text-[var(--text-muted)]" />
@@ -49,8 +50,9 @@ const extraClass = (Astro.props as Props).class ?? '';
     />
   </div>
 
+  <!-- Results dropdown (desktop: anchored; mobile: fixed full-width under the mobile bar) -->
   <div
-    class="absolute left-0 right-0 top-[5.25rem] z-50 hidden overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elev-1)] shadow-lg sm:top-11"
+    class="fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+6.75rem)] z-[60] hidden overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elev-1)] shadow-xl sm:absolute sm:left-0 sm:right-0 sm:top-11 sm:shadow-lg"
     data-search-dropdown
   >
     <div class="max-h-80 overflow-auto p-2" data-search-results></div>
@@ -179,7 +181,10 @@ const extraClass = (Astro.props as Props).class ?? '';
     });
 
     document.addEventListener('click', (e) => {
-      if (!root.contains(e.target)) setOpen(false);
+      if (!root.contains(e.target)) {
+        setOpen(false);
+        setMobileOpen(false);
+      }
     });
   })();
 </script>

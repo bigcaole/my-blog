@@ -1,0 +1,17 @@
+services:
+  decap_oauth:
+    # Lightweight OAuth provider compatible with Decap/Netlify CMS
+    image: storjlabs/netlify-cms-oauth-provider-go:1
+    ports:
+      - "4000:4000"
+    environment:
+      # Bind address
+      HOST: "0.0.0.0:4000"
+      # Random secret for session cookie encryption/signing
+      SESSION_SECRET: "PLEASE_CHANGE_ME_TO_A_LONG_RANDOM_STRING"
+
+      # GitHub OAuth App credentials
+      GITHUB_KEY: "YOUR_GITHUB_CLIENT_ID"
+      GITHUB_SECRET: "YOUR_GITHUB_CLIENT_SECRET"
+    restart: unless-stopped
+

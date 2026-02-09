@@ -1,162 +1,98 @@
-export type NavItem = {
-  label: string;
-  href: string;
-  icon?: IconName;
-};
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-export type SocialLinks = Partial<{
-  github: string;
-  telegram: string;
-  x: string;
-  weibo: string;
-  email: string;
-}>;
-
-export type SeoConfig = {
-  ogImage: string;
-  twitterHandle: string;
-};
-
-export type GiscusConfig = {
-  enabled: boolean;
-  repo: string;
-  repoId: string;
-  category: string;
-  categoryId: string;
-  mapping: 'pathname' | 'url' | 'title' | 'og:title' | 'specific' | 'number';
-  strict: '0' | '1';
-  reactionsEnabled: '0' | '1';
-  emitMetadata: '0' | '1';
-  inputPosition: 'top' | 'bottom';
-  lang: string;
-  loading: 'lazy' | 'eager';
-  themeLight: string;
-  themeDark: string;
-};
-
-export type SubscribeConfig = {
-  rssPath: string;
-  email: {
-    enabled: boolean;
-    title: string;
-    description: string;
-    formAction: string;
-    emailName: string;
-    placeholder: string;
-    buttonText: string;
-    note: string;
-  };
-};
-
-export type ToolStatus = 'active' | 'coming_soon';
+export type NavItem = { label: string; href: string; icon?: string };
 export type ToolItem = {
   title: string;
   slug: string;
-  description: string;
-  icon: IconName;
-  status: ToolStatus;
+  description?: string;
+  icon?: string;
+  status?: 'live' | 'coming-soon';
 };
 
-// Keep this list in sync with `src/components/ui/Icon.astro`
-export type IconName =
-  | 'home'
-  | 'posts'
-  | 'tags'
-  | 'tools'
-  | 'about'
-  | 'search'
-  | 'menu'
-  | 'github'
-  | 'telegram'
-  | 'x'
-  | 'weibo'
-  | 'mail'
-  | 'sun'
-  | 'moon'
-  | 'monitor'
-  | 'arrow-right'
-  | 'arrow-left'
-  | 'sparkles'
-  | 'clock'
-  | 'hash'
-  | 'terminal'
-  | 'wand'
-  | 'calendar'
-  | 'globe'
-  | 'binary'
-  | 'repeat';
+export type SiteSettingsFile = {
+  siteName?: string;
+  slogan?: string;
+  description?: string;
+  nav?: { label: string; href: string }[];
+  social?: { github?: string; telegram?: string; x?: string; email?: string };
+  tools?: { title: string; slug: string; description?: string; status?: 'live' | 'coming-soon'; iconKey?: string }[];
+  seo?: { twitterHandle?: string; ogImage?: string };
+};
 
-export const SITE = {
-  name: '我的极简博客',
-  slogan: '极简但有层次 · 工具型个人站点',
-  description: '低频更新：教程 / 经验 / 随笔 / 综合。以“可复用、可检索、可长期维护”为目标。',
-  url: 'https://example.com',
+export type SiteConfig = {
+  name: string;
+  slogan: string;
+  description: string;
+  url: string;
+  locale: string;
+  author: { name: string };
+  nav: NavItem[];
+  social: { github?: string; telegram?: string; x?: string; email?: string };
+  tools: ToolItem[];
+  seo: { ogImage?: string; twitterHandle?: string };
+  giscus: {
+    enabled: boolean;
+    repo: string;
+    repoId: string;
+    category: string;
+    categoryId: string;
+    mapping: 'pathname' | 'url' | 'title' | 'og:title' | 'specific' | 'number';
+    strict: '0' | '1';
+    reactionsEnabled: '0' | '1';
+    emitMetadata: '0' | '1';
+    inputPosition: 'top' | 'bottom';
+    themeLight: string;
+    themeDark: string;
+    lang: string;
+    loading: 'lazy' | 'eager';
+  };
+  subscribe: {
+    rssPath: string;
+    email: {
+      enabled: boolean;
+      title: string;
+      description: string;
+      formAction: string;
+      emailName: string;
+      placeholder: string;
+      buttonText: string;
+      note: string;
+    };
+  };
+};
+
+const defaults: SiteConfig = {
+  name: '极简工具站',
+  slogan: '极简但有层次',
+  description: '一个极简 + 工具型的个人博客：教程 / 经验 / 随笔 / 综合。',
+  url: 'https://YOUR_DOMAIN',
   locale: 'zh-CN',
-  author: {
-    name: 'Your Name',
-  },
-
-  seo: {
-    ogImage: '',
-    twitterHandle: '',
-  } satisfies SeoConfig,
-
+  author: { name: '0emo' },
   nav: [
     { label: '首页', href: '/', icon: 'home' },
     { label: '文章', href: '/posts/', icon: 'posts' },
-    { label: '标签', href: '/tags/', icon: 'tags' },
+    { label: '标签', href: '/tags/', icon: 'tag' },
     { label: '工具箱', href: '/tools/', icon: 'tools' },
-    { label: '关于', href: '/about/', icon: 'about' },
-  ] satisfies NavItem[],
-
+    { label: '关于', href: '/about/', icon: 'info' },
+  ],
   social: {
-    github: 'https://github.com/yourname',
-    telegram: 'https://t.me/yourname',
-    x: 'https://x.com/yourname',
-    weibo: '',
+    github: '',
+    telegram: '',
+    x: '',
     email: '',
-  } satisfies SocialLinks,
-
+  },
   tools: [
-    {
-      title: 'IP 信息查询',
-      slug: 'ip',
-      description: '查询本机出口 IP 或指定 IP 的国家 / 城市 / ASN / ISP。',
-      icon: 'globe',
-      status: 'active',
-    },
-    {
-      title: 'Base64 编码 / 解码',
-      slug: 'base64',
-      description: '支持 UTF-8 文本，附复制按钮与友好错误提示。',
-      icon: 'binary',
-      status: 'active',
-    },
-    {
-      title: 'Cron 下一次执行',
-      slug: 'cron',
-      description: '输入 5 段 cron 表达式，展示本地时区近 5 次执行时间。',
-      icon: 'repeat',
-      status: 'active',
-    },
-    {
-      title: 'CIDR 计算器',
-      slug: 'cidr',
-      description: '子网划分 / 掩码 / 地址范围（开发中）。',
-      icon: 'terminal',
-      status: 'coming_soon',
-    },
-    {
-      title: '端口检测',
-      slug: 'port-check',
-      description: '常用端口连通性检测（开发中）。',
-      icon: 'wand',
-      status: 'coming_soon',
-    },
-  ] satisfies ToolItem[],
-
+    { title: 'IP 信息查询', slug: 'ip', description: '查询国家/城市/ASN/ISP', icon: 'search', status: 'live' },
+    { title: 'Base64', slug: 'base64', description: 'UTF-8 编解码 + 复制', icon: 'sparkles', status: 'live' },
+    { title: 'Cron', slug: 'cron', description: '计算近 5 次执行时间', icon: 'clock', status: 'live' },
+  ],
+  seo: {
+    ogImage: '',
+    twitterHandle: '',
+  },
   giscus: {
-    enabled: true,
+    enabled: false,
     repo: 'OWNER/REPO',
     repoId: 'REPO_ID',
     category: 'General',
@@ -165,25 +101,91 @@ export const SITE = {
     strict: '0',
     reactionsEnabled: '1',
     emitMetadata: '0',
-    inputPosition: 'top',
+    inputPosition: 'bottom',
+    themeLight: 'light',
+    themeDark: 'dark',
     lang: 'zh-CN',
     loading: 'lazy',
-    themeLight: 'light',
-    themeDark: 'dark_dimmed',
-  } satisfies GiscusConfig,
-
+  },
   subscribe: {
     rssPath: '/rss.xml',
     email: {
       enabled: true,
-      title: '订阅更新',
-      description: '获取更新：RSS / 邮件订阅（可嵌入表单）。',
+      title: '邮件订阅',
+      description: '订阅更新（占位表单，可在配置中接入真实服务）。',
       formAction: '',
       emailName: 'email',
       placeholder: 'you@example.com',
       buttonText: '订阅',
-      note: '把表单 action 配到你的邮件服务商即可（例如 Buttondown / Mailchimp / 自建）。',
+      note: '提示：这只是占位配置，你可以在 site.ts 或 CMS 设置中接入真实表单服务。',
     },
-  } satisfies SubscribeConfig,
+  },
 };
 
+function readSettingsFile(): SiteSettingsFile | null {
+  try {
+    const p = fileURLToPath(new URL('../content/settings/site.json', import.meta.url));
+    if (!fs.existsSync(p)) return null;
+    const raw = fs.readFileSync(p, 'utf8');
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return null;
+    return data as SiteSettingsFile;
+  } catch {
+    return null;
+  }
+}
+
+function pickString(v: unknown): string | undefined {
+  if (typeof v !== 'string') return undefined;
+  const s = v.trim();
+  return s ? s : undefined;
+}
+
+function mergeSite(defaultSite: SiteConfig, s: SiteSettingsFile | null): SiteConfig {
+  if (!s) return defaultSite;
+
+  const next: SiteConfig = JSON.parse(JSON.stringify(defaultSite)) as SiteConfig;
+
+  next.name = pickString(s.siteName) ?? next.name;
+  next.slogan = pickString(s.slogan) ?? next.slogan;
+  next.description = pickString(s.description) ?? next.description;
+
+  if (Array.isArray(s.nav) && s.nav.length) {
+    next.nav = s.nav
+      .filter((x) => x && typeof x.label === 'string' && typeof x.href === 'string')
+      .map((x) => ({ label: x.label, href: x.href }));
+  }
+
+  if (s.social && typeof s.social === 'object') {
+    next.social = {
+      github: pickString(s.social.github) ?? next.social.github,
+      telegram: pickString(s.social.telegram) ?? next.social.telegram,
+      x: pickString(s.social.x) ?? next.social.x,
+      email: pickString(s.social.email) ?? next.social.email,
+    };
+  }
+
+  if (Array.isArray(s.tools) && s.tools.length) {
+    next.tools = s.tools
+      .filter((t) => t && typeof t.title === 'string' && typeof t.slug === 'string')
+      .map((t) => ({
+        title: t.title,
+        slug: t.slug,
+        description: pickString(t.description) ?? '',
+        status: t.status === 'coming-soon' ? 'coming-soon' : 'live',
+        icon: pickString(t.iconKey) ?? '',
+      }));
+  }
+
+  if (s.seo && typeof s.seo === 'object') {
+    next.seo = {
+      ogImage: pickString(s.seo.ogImage) ?? next.seo.ogImage,
+      twitterHandle: pickString(s.seo.twitterHandle) ?? next.seo.twitterHandle,
+    };
+  }
+
+  return next;
+}
+
+// Keep backward-compatible import style: `import { SITE } from '../config/site'`
+export const SITE: SiteConfig = mergeSite(defaults, readSettingsFile());

@@ -54,6 +54,7 @@
         transparent 4px
       );
     background-attachment: fixed;
+    overflow-x: hidden;
   }
 
   .dark body {
@@ -67,6 +68,13 @@
         transparent 1px,
         transparent 4px
       );
+  }
+
+  /* Mobile Safari / in-app browsers: avoid background-attachment: fixed quirks */
+  @media (max-width: 640px) {
+    body {
+      background-attachment: scroll;
+    }
   }
 
   ::selection {
@@ -92,6 +100,7 @@
     background: color-mix(in srgb, var(--bg) 78%, transparent);
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .ui-card {

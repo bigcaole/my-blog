@@ -105,6 +105,249 @@ featured: true
 - Giscus 配置（repo/category 等）
 - 订阅配置（RSS 路径、邮件订阅表单占位）
 
+## “管理面板”式写作（无需本地改文件）
+
+这个项目是 **Astro 静态站**：文章与配置最终都会变成构建产物（`dist/`），所以“想让公网看到更新”本质上仍然需要一次构建。
+
+但你不需要在本地手动构建镜像/部署——可以用 GitHub 自带界面当作“管理面板”，由 Actions 自动把内容写入仓库并触发构建/部署。
+
+本项目提供两种对小白更友好的方式：
+
+### 方式 A：直接在 GitHub 网页编辑（最简单）
+
+适合：改站名、改导航、改社交链接、改工具卡片、改文章等所有内容。
+
+1) 打开 GitHub 仓库页面
+2) 找到文件并点击编辑（铅笔按钮）
+3) 修改后直接 Commit 到 `main`
+4) 触发 Actions（构建镜像/部署），上线后即可看到更新
+
+常用入口：
+
+- 站点配置：`src/config/site.ts`
+- 文章目录：`src/content/blog/`
+
+### 方式 B：用 GitHub Issue 发布文章（更像 CMS）
+
+适合：只想写文章，不想找文件路径。
+
+已内置：
+
+- Issue 模板：`.github/ISSUE_TEMPLATE/publish-post.md`
+- 发布工作流：`.github/workflows/publish-post-from-issue.yml`
+
+使用步骤：
+
+1) 在 GitHub 仓库里先创建一个标签：`publish`（只需一次）
+2) 新建 Issue，选择模板「发布文章（Markdown）」
+3) 在 Issue 正文里直接写 Markdown（可不写 frontmatter）
+4) 写完后给 Issue 加上标签 `publish`
+5) Actions 会自动：
+   - 把 Issue 正文保存为 `src/content/blog/*.md`
+   - 提交并推送到仓库
+   - 触发后续构建/部署流程
+
+可选增强（不懂也没关系）：
+
+- 你可以在正文里写两行让系统自动生成更准确的 frontmatter：
+  - `Tags: A, B`（或 `标签：A, B`）
+  - `Description: ...`（或 `摘要：...`）
+
+> 重要：这套“管理面板”不会绕过构建，只是把“构建/部署”自动化了，你不需要在本地反复 build 镜像。
+
+## Decap CMS 内容管理（/admin）
+
+本项目已集成 Decap CMS：
+
+- 管理后台地址：`/admin`
+- 配置文件：`public/admin/config.yml`
+- 文章目录：`src/content/blog/`
+- 图片上传：`public/uploads`（访问路径 `/uploads`）
+
+### 自定义后台入口（可选）
+
+如果你希望把后台入口从 `/admin` 改成更“私密”的路径（例如 `/0emo-admin`），本项目支持通过环境变量生成一个同内容的后台入口（不破坏默认 `/admin`）：
+
+- 环境变量：`ADMIN_PATH=0emo-admin`
+
+行为：
+
+- 仍保留 `/admin`
+- 额外生成 `/0emo-admin`（内容与 `/admin` 相同）
+
+本地运行示例：
+
+```bash
+set ADMIN_PATH=0emo-admin
+npm run dev
+```
+
+线上（Cloudflare Pages / Docker 构建环境等）同理，只需要在构建环境注入 `ADMIN_PATH` 即可。
+
+> 提醒：自定义路径不等于安全。真正的安全建议用 GitHub 授权 +（可选）OpenResty Basic Auth。
+
+### 自动填充站点域名占位（可选）
+
+`public/admin/config.yml` 里默认包含 `https://YOUR_DOMAIN` 占位。你可以通过环境变量自动替换（推荐）：
+
+- `SITE_URL=https://你的域名`
+
+该替换在 `predev/prebuild` 阶段自动执行。
+
+### 本地体验（无需 OAuth）
+
+Decap 的 `local_backend: true` 适合本地先体验编辑流程：
+
+1) 启动站点：
+
+```bash
+npm run dev
+```
+
+2) 另开一个终端启动本地后端（Decap Proxy Server）：
+
+```bash
+npx decap-server
+```
+
+3) 打开：
+
+- `http://localhost:4321/admin`
+
+> 如果你更喜欢固定端口，也可以在本地后端启动参数中设置端口；默认一般是 `http://localhost:8081` 供 CMS 访问。
+
+### 线上 GitHub 登录（需要 OAuth Proxy）
+
+Decap CMS 的 GitHub backend 在线上需要 OAuth 服务端。这里提供一个最简单可用、适配 1Panel + OpenResty 的方案：**同域名反向代理到 OAuth Proxy 容器**。
+
+#### 第 1 步：创建 GitHub OAuth App
+
+在 GitHub 创建 OAuth App，并设置（把 `你的域名` 替换成实际值）：
+
+- Homepage URL：`https://你的域名`
+- Authorization callback URL：`https://你的域名/api/auth/callback`
+
+创建完成后得到：
+
+- Client ID
+- Client Secret
+
+#### 第 2 步：部署 OAuth Proxy（Docker）
+
+项目已提供 `docker-compose.oauth-proxy.yml`，你只需要替换三个环境变量：
+
+- `SESSION_SECRET`：一段足够长的随机字符串
+- `GITHUB_KEY`：Client ID
+- `GITHUB_SECRET`：Client Secret
+
+启动：
+
+```bash
+docker compose -f docker-compose.oauth-proxy.yml up -d
+```
+
+该服务会在服务器上监听 `4000` 端口。
+
+#### 第 3 步：OpenResty 反向代理（1Panel）
+
+在你的站点反代中添加一条规则（关键点：带尾部 `/` 的转发，确保路径正确映射）：
+
+- 路径前缀：`/api/auth/`
+- 目标：`http://127.0.0.1:4000/`
+
+反代后，这些路径会工作：
+
+- `https://你的域名/api/auth/auth`  → OAuth 登录入口（对应上游 `/auth`）
+- `https://你的域名/api/auth/callback` → OAuth 回调（对应上游 `/callback`）
+
+#### 第 4 步：配置 CMS 的站点域名
+
+打开 `public/admin/config.yml`，把以下占位替换成你的实际域名：
+
+- `backend.base_url: "https://YOUR_DOMAIN/api/auth"`
+- `site_url: "https://YOUR_DOMAIN"`
+
+然后访问：
+
+- `https://你的域名/admin`
+
+即可 GitHub 登录 → 新建/编辑文章 → 发布 → 自动提交到 GitHub 仓库并触发你的部署流程。
+
+### 站点设置也可在后台改（settings 集合）
+
+Decap CMS 里提供了「设置」集合，会编辑单文件：
+
+- `src/content/settings/site.json`
+
+前端会优先读取该文件来覆盖默认的 `SITE` 配置（站名、slogan、描述、导航、社交链接、工具卡片、SEO 等），让你更像在“管理面板”里改前台元素。
+
+> 说明：该设置文件是版本化的（会提交到 GitHub），所以修改后同样会触发构建/部署，线上才会生效。
+
+### 安全提醒
+
+- `/admin` 是公开可访问的登录入口，但只有完成 GitHub 授权的人才能提交内容
+- 建议 OAuth App 与仓库权限只给你自己的 GitHub 账号使用
+- 如果你希望更私密，可以在 OpenResty 对 `/admin` 加一层 Basic Auth（可选）
+
+## 备份与恢复（管理面板内）
+
+### 合理性分析（为什么需要备份？）
+
+即使你使用 Decap CMS 在网页里写文章/改配置，本项目的本质仍是 **Git 驱动的静态站**：
+
+- 文章/设置/上传图片最终会以文件形式提交到 GitHub 仓库
+- 构建与部署会基于仓库内容生成 `dist/`（或镜像）
+
+因此：
+
+- **Git 历史本身就是最可靠的“备份”**（每一次提交都是一个可回滚的快照）
+- “额外备份”主要是为了更方便地：
+  - 创建一个清晰可识别的快照点（tag）
+  - 导出一份压缩包用于离线保存
+  - 用 PR 安全回滚（避免直接强推 main）
+
+### 管理面板入口
+
+已提供一个管理面板内的入口页面：
+
+- `/admin/backup.html`
+
+在 `/admin` 页面右下角会有一个「备份/恢复」按钮，点击即可打开备份与回滚说明与快捷入口。
+
+### 一键备份（创建 tag + 生成压缩包）
+
+工作流：`.github/workflows/backup-snapshot.yml`
+
+做了什么：
+
+- 创建 tag：`backup-YYYYMMDD-HHMMSS`
+- 上传一份压缩包 artifact（包含文章/设置/上传图片等关键目录；artifact 默认会过期，但 tag 永久保留）
+
+使用方法：
+
+1) GitHub → Actions → `Backup Snapshot` → Run workflow
+2) 可选填写备注
+3) 运行完成后：
+   - Tags 里会出现 `backup-...`
+   - Actions 里会有一个可下载的 artifact
+
+### 安全恢复（从备份 ref 创建 PR）
+
+工作流：`.github/workflows/restore-from-ref.yml`
+
+为什么这样设计：
+
+- 不直接回滚/强推 `main`，而是从 ref 创建一个 restore 分支并发起 PR
+- 你可以先审查改动，确认后再合并
+
+使用方法：
+
+1) GitHub → Actions → `Restore From Backup Ref (PR)` → Run workflow
+2) `ref` 填：
+   - 你要恢复的备份 tag（例如 `backup-20260209-010203`）
+   - 或任意 commit SHA
+3) Actions 会自动创建 PR；合并 PR 后触发正常构建/部署流程，线上即回滚到备份状态
+
 ## 配置 Giscus（评论）
 
 1) 在 GitHub 仓库开启 Discussions，并创建一个分类（例如 “General”）。

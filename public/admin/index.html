@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>内容管理</title>
+  </head>
+  <body>
+    <!-- Decap CMS (CDN) -->
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script>
+      // Optional: style the preview pane a bit closer to the site.
+      if (window.CMS) {
+        // Use relative path so /admin can be copied to a custom path (e.g. /my-admin)
+        window.CMS.registerPreviewStyle("preview.css");
+      }
+    </script>
+
+    <script>
+      // Lightweight "ops" entry: backup/restore helper button (does not modify CMS internals)
+      // Shows on /admin for small-site operators.
+      (function () {
+        function mount() {
+          if (document.getElementById("admin-ops-btn")) return;
+          const a = document.createElement("a");
+          a.id = "admin-ops-btn";
+          // Relative path so this works under a custom admin entry path.
+          a.href = "backup.html";
+          a.target = "_blank";
+          a.rel = "noreferrer";
+          a.textContent = "备份/恢复";
+          a.style.position = "fixed";
+          a.style.right = "14px";
+          a.style.bottom = "14px";
+          a.style.zIndex = "9999";
+          a.style.height = "40px";
+          a.style.display = "inline-flex";
+          a.style.alignItems = "center";
+          a.style.justifyContent = "center";
+          a.style.padding = "0 14px";
+          a.style.borderRadius = "14px";
+          a.style.color = "#fff";
+          a.style.fontWeight = "700";
+          a.style.textDecoration = "none";
+          a.style.background = "linear-gradient(135deg, #6366F1, #10B981)";
+          a.style.boxShadow = "0 10px 24px rgba(15, 23, 42, 0.18)";
+          document.body.appendChild(a);
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", mount);
+        } else {
+          mount();
+        }
+      })();
+    </script>
+  </body>
+</html>

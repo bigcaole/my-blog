@@ -5,6 +5,9 @@
   "type": "module",
   "engines": { "node": ">=20 <21" },
   "scripts": {
+    "predev": "npm run cms:prepare",
+    "prebuild": "npm run cms:prepare",
+    "cms:prepare": "node scripts/prepare-admin.mjs",
     "check:prod": "npm run build && npm run preview -- --host",
     "dev": "astro dev",
     "build": "astro build",

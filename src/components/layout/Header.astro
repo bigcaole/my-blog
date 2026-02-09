@@ -108,9 +108,13 @@ import ThemeToggle from './ThemeToggle.astro';
 </header>
 
 <script is:inline>
-  const btn = document.querySelector('[data-mobile-menu-toggle]');
-  const menu = document.querySelector('[data-mobile-menu]');
-  btn?.addEventListener('click', () => {
-    menu?.classList.toggle('hidden');
-  });
+  (() => {
+    const header = document.currentScript?.previousElementSibling;
+    if (!header) return;
+    const btn = header.querySelector('[data-mobile-menu-toggle]');
+    const menu = header.querySelector('[data-mobile-menu]');
+    btn?.addEventListener('click', () => {
+      menu?.classList.toggle('hidden');
+    });
+  })();
 </script>

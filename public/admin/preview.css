@@ -1,0 +1,29 @@
+/* Preview pane styling (very lightweight, does not affect the public site) */
+html,
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.7;
+  color: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    color: #e6eaf2;
+    background: #0b1020;
+  }
+}
+
+code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.5rem;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+pre {
+  padding: 1rem;
+  border-radius: 1rem;
+  overflow: auto;
+  background: rgba(15, 23, 42, 0.06);
+}
+

@@ -1,0 +1,58 @@
+name: Backup Snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "备份备注（可选）"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backup-snapshot
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create backup tag
+        id: tag
+        run: |
+          set -e
+          TS="$(date -u +%Y%m%d-%H%M%S)"
+          TAG="backup-${TS}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "backup snapshot ${TS} ${INPUT_NOTE:-}"
+          git push origin "$TAG"
+        env:
+          INPUT_NOTE: ${{ inputs.note }}
+
+      - name: Create tarball
+        run: |
+          set -e
+          mkdir -p .backup
+          tar -czf ".backup/${{ steps.tag.outputs.tag }}.tgz" \
+            src/content/blog \
+            src/content/settings \
+            public/uploads \
+            public/admin/config.yml \
+            src/config/site.ts \
+            README.md
+
+      - name: Upload artifact (90-day retention by default)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.tag.outputs.tag }}
+          path: .backup/*.tgz
+

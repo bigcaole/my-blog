@@ -1,0 +1,79 @@
+name: Restore From Backup Ref (PR)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "要恢复的 ref（例如 backup-20260209-010203 或任意 commit SHA）"
+        required: true
+        type: string
+      note:
+        description: "恢复备注（可选）"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: restore-from-ref
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch all refs
+        run: |
+          set -e
+          git fetch --all --tags --prune
+
+      - name: Create restore branch from ref
+        id: branch
+        run: |
+          set -e
+          REF="${INPUT_REF}"
+          TS="$(date -u +%Y%m%d-%H%M%S)"
+          SAFE_REF="$(echo "$REF" | tr '/' '-' | tr ':' '-')"
+          BR="restore/${SAFE_REF}-${TS}"
+          echo "branch=${BR}" >> "$GITHUB_OUTPUT"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B "$BR" "$REF"
+          git push --set-upstream origin "$BR"
+        env:
+          INPUT_REF: ${{ inputs.ref }}
+
+      - name: Open PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const base = 'main';
+            const head = '${{ steps.branch.outputs.branch }}';
+            const ref = '${{ inputs.ref }}';
+            const note = '${{ inputs.note }}'.trim();
+            const title = `restore: ${ref}`;
+            const body = [
+              `该 PR 用于将仓库恢复到 ref：\`${ref}\`。`,
+              ``,
+              `- 方式：从该 ref 创建 restore 分支并发起 PR（避免直接强推 main）`,
+              `- 合并后：会触发正常的构建/部署流程，使线上回到备份状态`,
+              note ? `` : null,
+              note ? `备注：${note}` : null,
+              ``,
+              `提示：合并前请确认站点配置与文章内容确实是你想恢复的版本。`,
+            ].filter(Boolean).join('\n');
+
+            const pr = await github.rest.pulls.create({ owner, repo, title, head, base, body });
+            core.notice(`Opened PR: #${pr.data.number}`);
+
