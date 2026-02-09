@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
 export type NavItem = { label: string; href: string; icon?: string };
 export type ToolItem = {
   title: string;
@@ -117,23 +114,10 @@ const defaults: SiteConfig = {
       emailName: 'email',
       placeholder: 'you@example.com',
       buttonText: '订阅',
-      note: '提示：这只是占位配置，你可以在 site.ts 或 CMS 设置中接入真实表单服务。',
+      note: '提示：这只是占位配置，你可以在设置中接入真实表单服务。',
     },
   },
 };
-
-function readSettingsFile(): SiteSettingsFile | null {
-  try {
-    const p = fileURLToPath(new URL('../content/settings/site.json', import.meta.url));
-    if (!fs.existsSync(p)) return null;
-    const raw = fs.readFileSync(p, 'utf8');
-    const data = JSON.parse(raw);
-    if (!data || typeof data !== 'object') return null;
-    return data as SiteSettingsFile;
-  } catch {
-    return null;
-  }
-}
 
 function pickString(v: unknown): string | undefined {
   if (typeof v !== 'string') return undefined;
@@ -141,7 +125,7 @@ function pickString(v: unknown): string | undefined {
   return s ? s : undefined;
 }
 
-function mergeSite(defaultSite: SiteConfig, s: SiteSettingsFile | null): SiteConfig {
+function mergeSite(defaultSite: SiteConfig, s: SiteSettingsFile | null | undefined): SiteConfig {
   if (!s) return defaultSite;
 
   const next: SiteConfig = JSON.parse(JSON.stringify(defaultSite)) as SiteConfig;
@@ -187,5 +171,11 @@ function mergeSite(defaultSite: SiteConfig, s: SiteSettingsFile | null): SiteCon
   return next;
 }
 
+// Settings override:
+// - The file exists in-repo and is edited via Decap CMS.
+// - Keep this module free of Node-only APIs to reduce build fragility in Vite/SSR contexts.
+// @ts-expect-error - JSON import is handled by Astro/Vite.
+import settings from '../content/settings/site.json';
+
 // Keep backward-compatible import style: `import { SITE } from '../config/site'`
-export const SITE: SiteConfig = mergeSite(defaults, readSettingsFile());
+export const SITE: SiteConfig = mergeSite(defaults, settings as SiteSettingsFile);
