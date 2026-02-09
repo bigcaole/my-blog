@@ -1,0 +1,8 @@
+services:
+  blog:
+    # Replace with your published image, e.g.:
+    # ghcr.io/<owner>/<repo>:latest
+    image: ${BLOG_IMAGE:-ghcr.io/OWNER/REPO:latest}
+    ports:
+      - "8080:80"
+    restart: unless-stopped

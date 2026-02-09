@@ -184,6 +184,114 @@ featured: true
 2. 按提示在域名 DNS 中添加/修改记录。
 3. 等待证书签发完成后，开启 HTTPS（一般自动）。
 
+## Docker 部署（可选）
+
+如果你希望用 Docker 在服务器上部署（不依赖本机 Node 环境），本项目已提供：
+
+- `Dockerfile`：多阶段构建（Node 20 构建静态站 → nginx 提供静态服务）
+- `docker/nginx.conf`：静态站 nginx 配置（长缓存静态资源、HTML 低缓存、友好 404）
+- `docker-compose.yml`：一条命令启动
+
+### 方式 A：docker build + docker run
+
+```bash
+docker build -t myblog .
+docker run --rm -p 8080:80 myblog
+```
+
+浏览器访问：`http://localhost:8080`
+
+#### 常见问题：无法拉取 `node:20-alpine` / `nginx:alpine`
+
+如果你看到类似“failed to fetch anonymous token / dial tcp … auth.docker.io …”的错误，说明当前网络无法访问 Docker Hub（或被代理/防火墙拦截）。
+
+解决思路（任选其一）：
+
+- 在 Docker Desktop 中配置网络代理（HTTP/HTTPS Proxy），或配置 Registry Mirror（镜像加速）
+- 使用可访问的镜像仓库替代基础镜像（本项目已支持通过 build args 覆盖）
+
+覆盖基础镜像示例（把镜像地址替换为你可访问的仓库）：
+
+```bash
+docker build -t myblog ^
+  --build-arg NODE_IMAGE=your-registry/node:20-alpine ^
+  --build-arg NGINX_IMAGE=your-registry/nginx:alpine ^
+  .
+```
+
+### 方式 B：docker compose
+
+```bash
+docker compose up --build
+```
+
+同样默认映射到 `http://localhost:8080`。
+
+> 如果需要替换基础镜像，可在项目根目录创建 `.env`：
+>
+> - `NODE_IMAGE=your-registry/node:20-alpine`
+> - `NGINX_IMAGE=your-registry/nginx:alpine`
+
+> 说明：本项目是 Astro 静态站，不需要 SPA fallback（无需 `_redirects` 的 `/* /index.html 200` 规则）。
+
+### GitHub Actions 构建镜像（推荐）
+
+如果你本机网络无法访问 Docker Hub（`docker.io`），推荐让 GitHub Actions 在云端构建镜像，并推送到 GHCR（GitHub Container Registry），服务器只负责拉取与运行。
+
+项目已内置工作流：
+
+- `.github/workflows/docker-image.yml`
+
+工作流行为：
+
+- 推送到 `main`：构建并推送 `ghcr.io/<owner>/<repo>:main`、`ghcr.io/<owner>/<repo>:sha-...`，并在默认分支推送 `latest`
+- 打 `v*` tag（如 `v1.0.0`）：构建并推送 `ghcr.io/<owner>/<repo>:v1.0.0`
+
+注意事项：
+
+- 仓库 Settings 中确保 Actions 有权限发布 Packages（工作流已声明 `packages: write`）
+- 镜像默认推送到：`ghcr.io/<owner>/<repo>`
+- 若仓库为私有，服务器拉取需要登录 GHCR（需要一个具备 `read:packages` 权限的 Token）
+- 你也可以把对应 Package 的可见性设置为 Public（若你希望免登录拉取）
+
+### 服务器部署（拉取 GHCR 镜像）
+
+方式 A：docker run（最简单）
+
+```bash
+docker login ghcr.io
+docker pull ghcr.io/<owner>/<repo>:latest
+docker run --rm -p 8080:80 ghcr.io/<owner>/<repo>:latest
+```
+
+方式 B：docker compose（推荐长期运行）
+
+1) 修改 `docker-compose.ghcr.yml` 的 `image` 为你的实际镜像名  
+2) 启动：
+
+```bash
+docker login ghcr.io
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+如果镜像是私有的，需要一个 Token 来登录 GHCR：
+
+```bash
+docker login ghcr.io
+```
+
+Token 建议（任选其一）：
+
+- Fine-grained PAT：对该仓库/组织授予 Packages Read 权限（以及需要时的仓库访问权限）
+- Classic PAT：`read:packages`（私有仓库通常还需要 `repo`）
+
+Compose 可选做法：用环境变量控制镜像名（避免写死在文件里）：
+
+```bash
+set BLOG_IMAGE=ghcr.io/<owner>/<repo>:latest
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
 ## 本地自检清单（上线前）
 
 建议逐项访问：
@@ -198,4 +306,3 @@ featured: true
 - `/tools/base64` Base64 编解码 + 复制
 - `/tools/cron` Cron 计算近 5 次
 - 深色模式切换（页面无闪烁 + Giscus 主题同步）
-

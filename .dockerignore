@@ -1,0 +1,8 @@
+node_modules
+dist
+.astro
+.cache
+.git
+.gitignore
+*.log
+README.md
