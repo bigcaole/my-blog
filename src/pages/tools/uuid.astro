@@ -1,0 +1,160 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "UUID 生成器";
+const description = "一键生成 UUID v4，支持批量生成与复制。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-[1fr_1fr]">
+    <div class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">生成选项</div>
+
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="grid gap-1 text-sm" style="color: var(--text)">
+          数量（1~50）
+          <input
+            id="count"
+            type="number"
+            min="1"
+            max="50"
+            value="5"
+            class="w-full rounded-xl border px-3 py-2 text-sm outline-none"
+            style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"
+          />
+        </label>
+
+        <label class="flex items-center gap-2 text-sm" style="color: var(--text)">
+          <input id="noHyphen" type="checkbox" class="h-4 w-4" />
+          去掉连字符（-）
+        </label>
+      </div>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button
+          id="btnGen"
+          type="button"
+          class="rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition active:scale-[0.98]"
+          style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white"
+        >
+          生成
+        </button>
+        <button
+          id="btnCopy"
+          type="button"
+          class="rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-elev-2)]"
+          style="border-color: var(--border); color: var(--text)"
+        >
+          复制全部
+        </button>
+        <button
+          id="btnClear"
+          type="button"
+          class="rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-elev-2)]"
+          style="border-color: var(--border); color: var(--text)"
+        >
+          清空
+        </button>
+      </div>
+
+      <p id="hint" class="mt-3 hidden text-sm" style="color: var(--text-muted)" aria-live="polite"></p>
+      <p id="err" class="mt-3 hidden text-sm" style="color: #ef4444" aria-live="polite"></p>
+    </div>
+
+    <div class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="mb-2 text-sm font-medium" style="color: var(--text)">结果</div>
+      <textarea
+        id="out"
+        class="min-h-[260px] w-full resize-y rounded-xl border px-3 py-2 text-sm outline-none"
+        style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"
+        placeholder="点击“生成”后会出现在这里…"
+        readonly
+      ></textarea>
+      <p class="mt-2 text-sm" style="color: var(--text-muted)">
+        提示：UUID 在浏览器端生成，不会上传到服务器。
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const $count = document.getElementById("count");
+    const $noHyphen = document.getElementById("noHyphen");
+    const $out = document.getElementById("out");
+    const $hint = document.getElementById("hint");
+    const $err = document.getElementById("err");
+
+    function showHint(msg) {
+      $hint.textContent = msg;
+      $hint.classList.remove("hidden");
+      window.setTimeout(() => $hint.classList.add("hidden"), 1200);
+    }
+    function showError(msg) {
+      $err.textContent = msg;
+      $err.classList.remove("hidden");
+    }
+    function clearError() {
+      $err.textContent = "";
+      $err.classList.add("hidden");
+    }
+
+    function uuidv4Fallback() {
+      // RFC 4122 v4
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+      return (
+        hex.slice(0, 8) +
+        "-" +
+        hex.slice(8, 12) +
+        "-" +
+        hex.slice(12, 16) +
+        "-" +
+        hex.slice(16, 20) +
+        "-" +
+        hex.slice(20)
+      );
+    }
+
+    function makeOne() {
+      const u = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : uuidv4Fallback();
+      return $noHyphen.checked ? u.replaceAll("-", "") : u;
+    }
+
+    function gen() {
+      clearError();
+      const n = Number($count.value);
+      if (!Number.isFinite(n) || n < 1 || n > 50) {
+        showError("数量必须在 1~50 之间。");
+        return;
+      }
+      const list = [];
+      for (let i = 0; i < n; i++) list.push(makeOne());
+      $out.value = list.join("\n");
+      showHint("已生成。");
+    }
+
+    document.getElementById("btnGen").addEventListener("click", gen);
+    document.getElementById("btnClear").addEventListener("click", () => {
+      clearError();
+      $out.value = "";
+      showHint("已清空。");
+    });
+    document.getElementById("btnCopy").addEventListener("click", async () => {
+      clearError();
+      try {
+        await navigator.clipboard.writeText($out.value || "");
+        showHint("已复制。");
+      } catch (e) {
+        showError("复制失败：请手动选择并复制结果。");
+      }
+    });
+
+    // Generate on first load for a better “tool” feel
+    try {
+      gen();
+    } catch (e) {}
+  </script>
+</ToolLayout>
+

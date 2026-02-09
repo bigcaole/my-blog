@@ -1,0 +1,399 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "子网掩码 / CIDR 计算器";
+const description = "IPv4 & IPv6：输入地址与前缀，计算掩码、网络地址等信息（本地计算）。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">IPv4</div>
+      <p class="mt-1 text-sm" style="color: var(--text-muted)">支持：<code>192.168.1.10/24</code> 或分别填写 IP + 前缀。</p>
+
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="grid gap-1 text-sm" style="color: var(--text)">
+          IPv4 / CIDR
+          <input
+            id="v4cidr"
+            class="w-full rounded-xl border px-3 py-2 text-sm outline-none"
+            style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"
+            placeholder="例如：192.168.1.10/24"
+            value="192.168.1.10/24"
+          />
+        </label>
+        <label class="grid gap-1 text-sm" style="color: var(--text)">
+          前缀（0~32）
+          <input
+            id="v4prefix"
+            type="number"
+            min="0"
+            max="32"
+            class="w-full rounded-xl border px-3 py-2 text-sm outline-none"
+            style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"
+            value="24"
+          />
+        </label>
+      </div>
+
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button
+          id="v4btn"
+          type="button"
+          class="rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition active:scale-[0.98]"
+          style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white"
+        >
+          计算 IPv4
+        </button>
+        <button
+          id="v4copy"
+          type="button"
+          class="rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-elev-2)]"
+          style="border-color: var(--border); color: var(--text)"
+        >
+          复制结果
+        </button>
+      </div>
+
+      <p id="v4err" class="mt-3 hidden text-sm" style="color: #ef4444" aria-live="polite"></p>
+
+      <div
+        class="mt-4 rounded-xl border p-3 text-sm"
+        style="border-color: var(--border); background: var(--bg-elev-2)"
+      >
+        <dl id="v4out" class="grid gap-2"></dl>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">IPv6</div>
+      <p class="mt-1 text-sm" style="color: var(--text-muted)">
+        支持压缩格式：<code>2001:db8::1/64</code>。IPv6 习惯用“前缀长度”，这里同时给出 128-bit 掩码表示。
+      </p>
+
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="grid gap-1 text-sm" style="color: var(--text)">
+          IPv6 / 前缀
+          <input
+            id="v6cidr"
+            class="w-full rounded-xl border px-3 py-2 text-sm outline-none"
+            style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"
+            placeholder="例如：2001:db8::1/64"
+            value="2001:db8::1/64"
+          />
+        </label>
+        <label class="grid gap-1 text-sm" style="color: var(--text)">
+          前缀（0~128）
+          <input
+            id="v6prefix"
+            type="number"
+            min="0"
+            max="128"
+            class="w-full rounded-xl border px-3 py-2 text-sm outline-none"
+            style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"
+            value="64"
+          />
+        </label>
+      </div>
+
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button
+          id="v6btn"
+          type="button"
+          class="rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition active:scale-[0.98]"
+          style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white"
+        >
+          计算 IPv6
+        </button>
+        <button
+          id="v6copy"
+          type="button"
+          class="rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-elev-2)]"
+          style="border-color: var(--border); color: var(--text)"
+        >
+          复制结果
+        </button>
+      </div>
+
+      <p id="v6err" class="mt-3 hidden text-sm" style="color: #ef4444" aria-live="polite"></p>
+
+      <div
+        class="mt-4 rounded-xl border p-3 text-sm"
+        style="border-color: var(--border); background: var(--bg-elev-2)"
+      >
+        <dl id="v6out" class="grid gap-2"></dl>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function dlSet($dl, rows) {
+      $dl.innerHTML = "";
+      for (const [k, v] of rows) {
+        const wrap = document.createElement("div");
+        wrap.className = "grid grid-cols-[150px_1fr] gap-2 rounded-lg border px-3 py-2";
+        wrap.style.borderColor = "var(--border)";
+        wrap.style.background = "var(--bg-elev-1)";
+
+        const dt = document.createElement("dt");
+        dt.textContent = k;
+        dt.style.color = "var(--text-muted)";
+
+        const dd = document.createElement("dd");
+        dd.textContent = v;
+        dd.style.color = "var(--text)";
+        dd.style.wordBreak = "break-all";
+
+        wrap.appendChild(dt);
+        wrap.appendChild(dd);
+        $dl.appendChild(wrap);
+      }
+    }
+
+    // ---------- IPv4 ----------
+    function parseIPv4(ip) {
+      const parts = (ip || "").trim().split(".");
+      if (parts.length !== 4) return null;
+      const nums = parts.map((p) => Number(p));
+      if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+      return nums;
+    }
+    function ipv4ToInt(nums) {
+      return ((nums[0] << 24) | (nums[1] << 16) | (nums[2] << 8) | nums[3]) >>> 0;
+    }
+    function intToIPv4(x) {
+      return [(x >>> 24) & 255, (x >>> 16) & 255, (x >>> 8) & 255, x & 255].join(".");
+    }
+    function v4Mask(prefix) {
+      if (prefix <= 0) return 0 >>> 0;
+      if (prefix >= 32) return 0xffffffff >>> 0;
+      return (0xffffffff << (32 - prefix)) >>> 0;
+    }
+
+    function v4Calc() {
+      const $cidr = document.getElementById("v4cidr");
+      const $prefix = document.getElementById("v4prefix");
+      const $err = document.getElementById("v4err");
+      const $out = document.getElementById("v4out");
+
+      $err.classList.add("hidden");
+      $err.textContent = "";
+
+      let ipStr = $cidr.value.trim();
+      let prefix = Number($prefix.value);
+
+      if (ipStr.includes("/")) {
+        const [a, b] = ipStr.split("/");
+        ipStr = (a || "").trim();
+        const p = Number((b || "").trim());
+        if (Number.isFinite(p)) prefix = p;
+        $prefix.value = String(prefix);
+      }
+
+      if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
+        $err.textContent = "IPv4 前缀必须在 0~32。";
+        $err.classList.remove("hidden");
+        dlSet($out, []);
+        return;
+      }
+      const nums = parseIPv4(ipStr);
+      if (!nums) {
+        $err.textContent = "IPv4 地址格式不正确。";
+        $err.classList.remove("hidden");
+        dlSet($out, []);
+        return;
+      }
+
+      const ip = ipv4ToInt(nums);
+      const mask = v4Mask(prefix);
+      const network = (ip & mask) >>> 0;
+      const broadcast = (network | (~mask >>> 0)) >>> 0;
+      const total = 2 ** (32 - prefix);
+      const usable = prefix >= 31 ? 0 : Math.max(total - 2, 0);
+      const firstHost = prefix >= 31 ? "" : intToIPv4((network + 1) >>> 0);
+      const lastHost = prefix >= 31 ? "" : intToIPv4((broadcast - 1) >>> 0);
+
+      dlSet($out, [
+        ["IP", intToIPv4(ip)],
+        ["CIDR", `${intToIPv4(network)}/${prefix}`],
+        ["子网掩码", intToIPv4(mask >>> 0)],
+        ["网络地址", intToIPv4(network)],
+        ["广播地址", intToIPv4(broadcast)],
+        ["可用主机", usable ? String(usable) : "—"],
+        ["主机范围", usable ? `${firstHost} ~ ${lastHost}` : "—"],
+      ]);
+    }
+
+    // ---------- IPv6 ----------
+    function parseIPv6(str) {
+      const s = (str || "").trim().toLowerCase();
+      if (!s) return null;
+      if (s.includes(".")) return null; // keep minimal: no IPv4-mapped
+
+      const parts = s.split("::");
+      if (parts.length > 2) return null;
+      const left = parts[0] ? parts[0].split(":").filter(Boolean) : [];
+      const right = parts[1] ? parts[1].split(":").filter(Boolean) : [];
+      if (left.some((g) => g.length > 4) || right.some((g) => g.length > 4)) return null;
+
+      const leftNums = left.map((g) => parseInt(g, 16));
+      const rightNums = right.map((g) => parseInt(g, 16));
+      if (leftNums.some((n) => !Number.isFinite(n) || n < 0 || n > 0xffff)) return null;
+      if (rightNums.some((n) => !Number.isFinite(n) || n < 0 || n > 0xffff)) return null;
+
+      const totalGroups = leftNums.length + rightNums.length;
+      if (parts.length === 1) {
+        if (totalGroups !== 8) return null;
+      } else {
+        if (totalGroups > 8) return null;
+      }
+
+      const fill = parts.length === 2 ? new Array(8 - totalGroups).fill(0) : [];
+      const groups = [...leftNums, ...fill, ...rightNums];
+      if (groups.length !== 8) return null;
+
+      let x = 0n;
+      for (const g of groups) x = (x << 16n) | BigInt(g);
+      return x;
+    }
+
+    function formatIPv6Full(x) {
+      const groups = [];
+      for (let i = 0; i < 8; i++) {
+        const shift = BigInt((7 - i) * 16);
+        const g = Number((x >> shift) & 0xffffn);
+        groups.push(g.toString(16).padStart(4, "0"));
+      }
+      return groups.join(":");
+    }
+
+    function formatIPv6Compressed(x) {
+      const groups = [];
+      for (let i = 0; i < 8; i++) {
+        const shift = BigInt((7 - i) * 16);
+        const g = Number((x >> shift) & 0xffffn);
+        groups.push(g.toString(16));
+      }
+      // find longest run of zeros
+      let bestStart = -1,
+        bestLen = 0;
+      for (let i = 0; i < 8; ) {
+        if (groups[i] !== "0") {
+          i++;
+          continue;
+        }
+        let j = i;
+        while (j < 8 && groups[j] === "0") j++;
+        const len = j - i;
+        if (len > bestLen) {
+          bestStart = i;
+          bestLen = len;
+        }
+        i = j;
+      }
+      if (bestLen >= 2) {
+        const left = groups.slice(0, bestStart).join(":");
+        const right = groups.slice(bestStart + bestLen).join(":");
+        if (!left && !right) return "::";
+        if (!left) return "::" + right;
+        if (!right) return left + "::";
+        return left + "::" + right;
+      }
+      return groups.join(":");
+    }
+
+    function v6Mask(prefix) {
+      if (prefix <= 0) return 0n;
+      if (prefix >= 128) return (1n << 128n) - 1n;
+      return ((1n << BigInt(prefix)) - 1n) << BigInt(128 - prefix);
+    }
+
+    function v6Calc() {
+      const $cidr = document.getElementById("v6cidr");
+      const $prefix = document.getElementById("v6prefix");
+      const $err = document.getElementById("v6err");
+      const $out = document.getElementById("v6out");
+
+      $err.classList.add("hidden");
+      $err.textContent = "";
+
+      let ipStr = $cidr.value.trim();
+      let prefix = Number($prefix.value);
+
+      if (ipStr.includes("/")) {
+        const [a, b] = ipStr.split("/");
+        ipStr = (a || "").trim();
+        const p = Number((b || "").trim());
+        if (Number.isFinite(p)) prefix = p;
+        $prefix.value = String(prefix);
+      }
+
+      if (!Number.isInteger(prefix) || prefix < 0 || prefix > 128) {
+        $err.textContent = "IPv6 前缀必须在 0~128。";
+        $err.classList.remove("hidden");
+        dlSet($out, []);
+        return;
+      }
+
+      const addr = parseIPv6(ipStr);
+      if (addr === null) {
+        $err.textContent = "IPv6 地址格式不正确（请检查 :: 压缩写法）。";
+        $err.classList.remove("hidden");
+        dlSet($out, []);
+        return;
+      }
+
+      const mask = v6Mask(prefix);
+      const network = addr & mask;
+      const hostBits = 128 - prefix;
+      const addrCount = hostBits >= 64 ? `2^${hostBits}` : String(2 ** hostBits);
+
+      dlSet($out, [
+        ["IP（压缩）", formatIPv6Compressed(addr)],
+        ["IP（展开）", formatIPv6Full(addr)],
+        ["CIDR", `${formatIPv6Compressed(network)}/${prefix}`],
+        ["网络前缀", formatIPv6Compressed(network)],
+        ["掩码（展开）", formatIPv6Full(mask)],
+        ["地址数量", addrCount],
+      ]);
+    }
+
+    function copyText(text) {
+      return navigator.clipboard.writeText(text);
+    }
+
+    document.getElementById("v4btn").addEventListener("click", v4Calc);
+    document.getElementById("v6btn").addEventListener("click", v6Calc);
+
+    document.getElementById("v4copy").addEventListener("click", async () => {
+      try {
+        const lines = [...document.querySelectorAll("#v4out dt")].map((dt) => dt.textContent);
+        const vals = [...document.querySelectorAll("#v4out dd")].map((dd) => dd.textContent);
+        const out = lines.map((k, i) => `${k}: ${vals[i] || ""}`).join("\n");
+        await copyText(out);
+      } catch (e) {
+        document.getElementById("v4err").textContent = "复制失败：请手动复制。";
+        document.getElementById("v4err").classList.remove("hidden");
+      }
+    });
+
+    document.getElementById("v6copy").addEventListener("click", async () => {
+      try {
+        const lines = [...document.querySelectorAll("#v6out dt")].map((dt) => dt.textContent);
+        const vals = [...document.querySelectorAll("#v6out dd")].map((dd) => dd.textContent);
+        const out = lines.map((k, i) => `${k}: ${vals[i] || ""}`).join("\n");
+        await copyText(out);
+      } catch (e) {
+        document.getElementById("v6err").textContent = "复制失败：请手动复制。";
+        document.getElementById("v6err").classList.remove("hidden");
+      }
+    });
+
+    // Auto-calc on first load
+    try {
+      v4Calc();
+      v6Calc();
+    } catch (e) {}
+  </script>
+</ToolLayout>
+

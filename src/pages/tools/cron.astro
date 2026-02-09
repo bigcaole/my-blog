@@ -1,239 +1,215 @@
 ---
-import ToolLayout from '../../layouts/ToolLayout.astro';
-import Card from '../../components/ui/Card.astro';
-import Button from '../../components/ui/Button.astro';
-import Icon from '../../components/ui/Icon.astro';
-import Input from '../../components/ui/Input.astro';
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "Cron 下一次执行时间";
+const description = "输入 5 段 Cron（分/时/日/月/周），展示本地时区未来 5 次触发时间。";
 ---
 
-<ToolLayout
-  title="Cron 下一次执行时间"
-  description="输入 5 段 cron 表达式（分 时 日 月 周），展示本地时区近 5 次执行时间。"
-  canonical="/tools/cron/"
-  slug="cron"
->
-  <noscript>
-    <Card class="p-5">
-      <p class="text-sm" style="color: var(--text-muted)">该工具需要启用 JavaScript。</p>
-    </Card>
-  </noscript>
-
-  <Card class="p-5">
-    <form id="cron-form" class="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <Input id="cron-input" placeholder="例如：*/5 * * * *" autocomplete="off" spellcheck="false" />
-      <Button variant="primary" type="submit" class="h-10 sm:w-auto">
-        <Icon name="clock" size={16} /> 计算
-      </Button>
-    </form>
-
-    <div class="mt-3 text-xs" style="color: var(--text-muted)">
-      支持：<code>*</code>、<code>*/n</code>、<code>a-b</code>、<code>a,b,c</code>、<code>a-b/n</code>。
-      周字段：<code>0-6</code>（周日=0），也接受 <code>7</code> 表示周日。
+<ToolLayout title={title} description={description}>
+  <div class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+    <label class="text-sm font-medium" style="color: var(--text)" for="cron">Cron 表达式（5 段）</label>
+    <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <input
+        id="cron"
+        class="w-full rounded-xl border px-3 py-2 text-sm outline-none"
+        style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"
+        placeholder="例如：*/5 * * * *"
+        value="*/5 * * * *"
+      />
+      <button
+        id="btn"
+        class="shrink-0 rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition active:scale-[0.98]"
+        style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white"
+        type="button"
+      >
+        计算
+      </button>
     </div>
+    <p class="mt-2 text-sm" style="color: var(--text-muted)">
+      说明：当“日”和“周”都不是 <code>*</code> 时，按常见 cron 语义使用“或”（满足其一即可）。
+    </p>
+    <p id="err" class="mt-3 hidden text-sm" style="color: #ef4444" aria-live="polite"></p>
 
-    <div id="cron-error" class="mt-4 hidden ui-alert text-sm"></div>
-
-    <div
-      id="cron-result"
-      class="mt-4 hidden rounded-2xl border p-4"
-      style="border-color: var(--border); background: var(--bg-elev-2);"
-    >
-      <div class="text-xs" style="color: var(--text-muted)">本地时区近 5 次：</div>
-      <ol id="cron-list" class="mt-3 space-y-2 text-sm"></ol>
-      <div class="mt-3 text-xs" style="color: var(--text-muted)">从「当前时间的下一分钟」开始计算。</div>
+    <div class="mt-4 rounded-xl border p-3" style="border-color: var(--border); background: var(--bg-elev-2)">
+      <div class="text-sm font-medium" style="color: var(--text)">未来 5 次</div>
+      <ol id="list" class="mt-2 grid gap-2 text-sm"></ol>
     </div>
-  </Card>
+  </div>
 
-  <script is:inline>
-    const form = document.getElementById('cron-form');
-    const input = document.getElementById('cron-input');
-    const errorBox = document.getElementById('cron-error');
-    const resultBox = document.getElementById('cron-result');
-    const list = document.getElementById('cron-list');
+  <script>
+    const $cron = document.getElementById("cron");
+    const $btn = document.getElementById("btn");
+    const $err = document.getElementById("err");
+    const $list = document.getElementById("list");
 
-    function showError(message) {
-      if (!errorBox) return;
-      errorBox.textContent = message || '';
-      errorBox.classList.toggle('hidden', !message);
+    function showError(msg) {
+      $err.textContent = msg;
+      $err.classList.remove("hidden");
+    }
+    function clearError() {
+      $err.textContent = "";
+      $err.classList.add("hidden");
     }
 
-    function showResult(items) {
-      if (!resultBox || !list) return;
-      list.innerHTML = '';
-      for (const s of items) {
-        const li = document.createElement('li');
-        li.className = 'rounded-xl border px-3 py-2';
-        li.style.borderColor = 'var(--border)';
-        li.style.background = 'var(--bg-elev-1)';
-        li.textContent = s;
-        list.appendChild(li);
-      }
-      resultBox.classList.remove('hidden');
-    }
-
-    function hideResult() {
-      resultBox?.classList.add('hidden');
-      if (list) list.innerHTML = '';
-    }
-
-    function parseField(field, min, max, kind) {
-      const raw = String(field || '').trim();
-      if (!raw) throw new Error(`${kind} 字段为空`);
-
-      const all = () => {
-        const s = new Set();
-        for (let i = min; i <= max; i++) s.add(i);
-        return s;
-      };
-
-      if (raw === '*') return { set: all(), isStar: true };
-
-      const parts = raw.split(',');
-      const set = new Set();
-
-      const addRange = (start, end, step) => {
-        if ([start, end, step].some((n) => Number.isNaN(n))) throw new Error(`${kind} 字段格式不正确`);
-        if (step <= 0) throw new Error(`${kind} 字段步长必须 > 0`);
-        if (start < min || end > max || start > end) throw new Error(`${kind} 字段范围应在 ${min}-${max}`);
-        for (let v = start; v <= end; v += step) set.add(v);
-      };
-
-      for (const token of parts) {
-        const t = token.trim();
-        if (!t) continue;
-
-        const stepSplit = t.split('/');
-        const left = stepSplit[0];
-        const step = stepSplit.length === 2 ? Number(stepSplit[1]) : 1;
-        if (stepSplit.length > 2) throw new Error(`${kind} 字段格式不正确`);
-
-        if (left === '*') {
-          addRange(min, max, step);
-          continue;
-        }
-
-        const rangeSplit = left.split('-');
-        if (rangeSplit.length === 1) {
-          const v = Number(rangeSplit[0]);
-          addRange(v, v, 1);
-          continue;
-        }
-        if (rangeSplit.length === 2) {
-          addRange(Number(rangeSplit[0]), Number(rangeSplit[1]), step);
-          continue;
-        }
-        throw new Error(`${kind} 字段格式不正确`);
-      }
-
-      if (!set.size) throw new Error(`${kind} 字段没有可用值`);
-
-      let isFullRange = true;
-      for (let i = min; i <= max; i++) {
-        if (!set.has(i)) {
-          isFullRange = false;
-          break;
-        }
-      }
-      return { set, isStar: isFullRange };
-    }
-
-    function parseCron(expr) {
-      const fields = String(expr || '').trim().split(/\s+/);
-      if (fields.length !== 5) throw new Error('cron 必须是 5 段：分 时 日 月 周');
-
-      const [minF, hourF, domF, monF, dowF] = fields;
-      const minutes = parseField(minF, 0, 59, '分');
-      const hours = parseField(hourF, 0, 23, '时');
-      const dom = parseField(domF, 1, 31, '日');
-      const month = parseField(monF, 1, 12, '月');
-      const dowRaw = parseField(dowF, 0, 7, '周');
-
-      const dow = new Set();
-      for (const v of dowRaw.set) dow.add(v === 7 ? 0 : v);
-      const dowIsStar =
-        dowRaw.isStar || (dow.size === 7 && [0, 1, 2, 3, 4, 5, 6].every((v) => dow.has(v)));
-
-      return {
-        minutes: minutes.set,
-        hours: hours.set,
-        dom: dom.set,
-        month: month.set,
-        dow,
-        domIsStar: dom.isStar,
-        dowIsStar,
-      };
-    }
-
-    function matches(cron, d) {
-      const m = d.getMinutes();
-      const h = d.getHours();
-      const mon = d.getMonth() + 1;
-      const day = d.getDate();
-      const w = d.getDay(); // 0=Sun
-
-      if (!cron.minutes.has(m)) return false;
-      if (!cron.hours.has(h)) return false;
-      if (!cron.month.has(mon)) return false;
-
-      const domMatch = cron.dom.has(day);
-      const dowMatch = cron.dow.has(w);
-
-      // Vixie-cron style:
-      // - if either field is '*', the other must match
-      // - if both are restricted, match if either matches (OR)
-      if (cron.domIsStar && cron.dowIsStar) return true;
-      if (cron.domIsStar) return dowMatch;
-      if (cron.dowIsStar) return domMatch;
-      return domMatch || dowMatch;
-    }
-
-    function nextRuns(expr, count = 5) {
-      const cron = parseCron(expr);
+    function range(min, max) {
       const out = [];
-      const start = new Date();
-      start.setSeconds(0, 0);
-      start.setMinutes(start.getMinutes() + 1);
+      for (let i = min; i <= max; i++) out.push(i);
+      return out;
+    }
 
-      const maxMinutes = 1500000; // ~2.85 years
-      let cursor = new Date(start);
+    function parseField(src, min, max, { map7to0 = false } = {}) {
+      const trimmed = (src || "").trim();
+      if (!trimmed) return null;
 
-      for (let i = 0; i < maxMinutes && out.length < count; i++) {
-        if (matches(cron, cursor)) out.push(new Date(cursor));
-        cursor.setMinutes(cursor.getMinutes() + 1);
+      const all = new Set(range(min, max));
+      if (trimmed === "*") return { any: true, values: all };
+
+      const out = new Set();
+      const parts = trimmed.split(",");
+      for (const part0 of parts) {
+        const part = part0.trim();
+        if (!part) return null;
+
+        let base = part;
+        let step = 1;
+        if (part.includes("/")) {
+          const segs = part.split("/");
+          if (segs.length !== 2) return null;
+          base = segs[0].trim();
+          step = Number(segs[1]);
+          if (!Number.isFinite(step) || step <= 0) return null;
+        }
+
+        const addVal = (v) => {
+          let vv = v;
+          if (map7to0 && vv === 7) vv = 0;
+          if (vv < min || vv > max) return false;
+          out.add(vv);
+          return true;
+        };
+
+        if (base === "*" || base === "") {
+          for (let v = min; v <= max; v += step) addVal(v);
+          continue;
+        }
+
+        if (base.includes("-")) {
+          const segs = base.split("-");
+          if (segs.length !== 2) return null;
+          const a = Number(segs[0]);
+          const b = Number(segs[1]);
+          if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+          const start = Math.min(a, b);
+          const end = Math.max(a, b);
+          for (let v = start; v <= end; v += step) {
+            if (!addVal(v)) return null;
+          }
+          continue;
+        }
+
+        const n = Number(base);
+        if (!Number.isFinite(n)) return null;
+        if (step !== 1) {
+          // single number with step is unusual; treat as "n" only
+          if (!addVal(n)) return null;
+        } else {
+          if (!addVal(n)) return null;
+        }
       }
 
-      if (out.length < count) {
-        throw new Error('在合理时间范围内未找到足够的执行时间（表达式可能过于稀疏或不可达）。');
+      if (out.size === 0) return null;
+      return { any: false, values: out };
+    }
+
+    function matchCron(date, cron) {
+      const m = date.getMinutes();
+      const h = date.getHours();
+      const dom = date.getDate();
+      const mon = date.getMonth() + 1;
+      const dow = date.getDay(); // 0=Sun
+
+      if (!cron.min.values.has(m)) return false;
+      if (!cron.hour.values.has(h)) return false;
+      if (!cron.month.values.has(mon)) return false;
+
+      const domAny = cron.dom.any;
+      const dowAny = cron.dow.any;
+      const domMatch = cron.dom.values.has(dom);
+      const dowMatch = cron.dow.values.has(dow);
+
+      let dayOk = true;
+      if (domAny && dowAny) dayOk = true;
+      else if (domAny) dayOk = dowMatch;
+      else if (dowAny) dayOk = domMatch;
+      else dayOk = domMatch || dowMatch;
+
+      return dayOk;
+    }
+
+    function computeNext(expr) {
+      const parts = expr.trim().split(/\s+/);
+      if (parts.length !== 5) throw new Error("Cron 必须是 5 段：分 时 日 月 周");
+
+      const minF = parseField(parts[0], 0, 59);
+      const hourF = parseField(parts[1], 0, 23);
+      const domF = parseField(parts[2], 1, 31);
+      const monthF = parseField(parts[3], 1, 12);
+      const dowF = parseField(parts[4], 0, 6, { map7to0: true });
+      if (!minF || !hourF || !domF || !monthF || !dowF) throw new Error("Cron 格式不合法（仅支持数字、*、逗号、范围、步进）");
+
+      const cron = { min: minF, hour: hourF, dom: domF, month: monthF, dow: dowF };
+
+      const out = [];
+      const now = new Date();
+      now.setSeconds(0, 0);
+      let t = new Date(now.getTime() + 60_000);
+
+      // Safety cap: search up to ~370 days (minutes)
+      const maxIter = 60 * 24 * 370;
+      for (let i = 0; i < maxIter && out.length < 5; i++) {
+        if (matchCron(t, cron)) out.push(new Date(t));
+        t = new Date(t.getTime() + 60_000);
       }
       return out;
     }
 
-    const fmt = new Intl.DateTimeFormat(undefined, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      showError('');
-      hideResult();
-      const expr = String(input?.value || '').trim();
-      if (!expr) {
-        showError('请输入 cron 表达式，例如：*/5 * * * *');
+    function render(list) {
+      $list.innerHTML = "";
+      if (!list.length) {
+        const li = document.createElement("li");
+        li.textContent = "未找到未来触发时间（请检查表达式）。";
+        li.style.color = "var(--text-muted)";
+        $list.appendChild(li);
         return;
       }
-      try {
-        const runs = nextRuns(expr, 5).map((d) => fmt.format(d));
-        showResult(runs);
-      } catch (err) {
-        showError(err?.message || '计算失败：请检查表达式格式。');
+      for (const d of list) {
+        const li = document.createElement("li");
+        li.className = "rounded-lg border px-3 py-2";
+        li.style.borderColor = "var(--border)";
+        li.style.background = "var(--bg-elev-1)";
+        li.style.color = "var(--text)";
+        li.textContent = d.toLocaleString();
+        $list.appendChild(li);
       }
+    }
+
+    function run() {
+      clearError();
+      try {
+        const list = computeNext($cron.value);
+        render(list);
+      } catch (e) {
+        showError(e && e.message ? e.message : "计算失败：请检查 Cron 表达式。");
+        render([]);
+      }
+    }
+
+    $btn.addEventListener("click", run);
+    $cron.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") run();
     });
 
-    if (input) input.value = '*/5 * * * *';
+    run();
   </script>
 </ToolLayout>
+

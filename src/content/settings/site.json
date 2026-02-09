@@ -1,10 +1,60 @@
 {
-  "siteName": "",
-  "slogan": "",
-  "description": "",
-  "nav": [],
-  "social": {},
-  "tools": [],
-  "seo": {}
+  "url": "https://blog.0emo.com",
+  "siteName": "0emo博客",
+  "slogan": "极简 · 工具 · 低频更新",
+  "description": "一个极简 + 工具型的个人博客：教程 / 经验 / 随笔 / 综合。",
+  "nav": [
+    { "label": "首页", "href": "/" },
+    { "label": "文章", "href": "/posts" },
+    { "label": "标签", "href": "/tags" },
+    { "label": "工具箱", "href": "/tools" },
+    { "label": "关于", "href": "/about" }
+  ],
+  "social": {
+    "github": "https://github.com/bigcaole/my-blog",
+    "telegram": "",
+    "twitter": "",
+    "email": ""
+  },
+  "tools": [
+    {
+      "title": "IP 信息查询",
+      "slug": "ip",
+      "description": "查询公网 IP、国家/城市/ASN/ISP。",
+      "status": "live",
+      "iconKey": "search"
+    },
+    {
+      "title": "Base64 编码/解码",
+      "slug": "base64",
+      "description": "文本 ↔ Base64（UTF-8），支持复制与错误提示。",
+      "status": "live",
+      "iconKey": "file-text"
+    },
+    {
+      "title": "Cron 下一次执行",
+      "slug": "cron",
+      "description": "输入 5 段 Cron，展示未来 5 次执行时间（本地时区）。",
+      "status": "live",
+      "iconKey": "chevron-down"
+    },
+    {
+      "title": "UUID 生成器",
+      "slug": "uuid",
+      "description": "一键生成 UUID v4，支持批量生成与复制。",
+      "status": "live",
+      "iconKey": "sparkles"
+    },
+    {
+      "title": "子网掩码 / CIDR",
+      "slug": "subnet",
+      "description": "IPv4 & IPv6 子网掩码、网络地址等计算。",
+      "status": "live",
+      "iconKey": "wrench"
+    }
+  ],
+  "seo": {
+    "twitterHandle": "",
+    "ogImage": "/og.png"
+  }
 }
-

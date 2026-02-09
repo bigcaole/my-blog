@@ -2,58 +2,74 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>内容管理已移除</title>
     <meta name="robots" content="noindex,nofollow" />
-    <title>内容管理</title>
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --border: rgba(15, 23, 42, 0.12);
+        --text: #0f172a;
+        --muted: #475569;
+        --primary: #6366f1;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1020;
+          --card: #0f172a;
+          --border: rgba(255, 255, 255, 0.1);
+          --text: #e6eaf2;
+          --muted: #a8b0c2;
+        }
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+          "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background: var(--bg);
+      }
+      .card {
+        width: min(720px, calc(100vw - 32px));
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      a {
+        color: var(--primary);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
-    <!-- Decap CMS (CDN) -->
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-    <script>
-      // Optional: style the preview pane a bit closer to the site.
-      if (window.CMS) {
-        // Use relative path so /admin can be copied to a custom path (e.g. /my-admin)
-        window.CMS.registerPreviewStyle("preview.css");
-      }
-    </script>
-
-    <script>
-      // Lightweight "ops" entry: backup/restore helper button (does not modify CMS internals)
-      // Shows on /admin for small-site operators.
-      (function () {
-        function mount() {
-          if (document.getElementById("admin-ops-btn")) return;
-          const a = document.createElement("a");
-          a.id = "admin-ops-btn";
-          // Relative path so this works under a custom admin entry path.
-          a.href = "backup.html";
-          a.target = "_blank";
-          a.rel = "noreferrer";
-          a.textContent = "备份/恢复";
-          a.style.position = "fixed";
-          a.style.right = "14px";
-          a.style.bottom = "14px";
-          a.style.zIndex = "9999";
-          a.style.height = "40px";
-          a.style.display = "inline-flex";
-          a.style.alignItems = "center";
-          a.style.justifyContent = "center";
-          a.style.padding = "0 14px";
-          a.style.borderRadius = "14px";
-          a.style.color = "#fff";
-          a.style.fontWeight = "700";
-          a.style.textDecoration = "none";
-          a.style.background = "linear-gradient(135deg, #6366F1, #10B981)";
-          a.style.boxShadow = "0 10px 24px rgba(15, 23, 42, 0.18)";
-          document.body.appendChild(a);
-        }
-
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", mount);
-        } else {
-          mount();
-        }
-      })();
-    </script>
+    <div class="card">
+      <h1>内容管理已移除</h1>
+      <p>
+        本站已通过 Cloudflare Pages 部署，当前版本不再提供在线后台写作/发布功能。
+        如需内容更新，请直接在仓库中编辑 <code>src/content/blog</code> 下的 Markdown 文件并触发部署。
+      </p>
+      <p style="margin-top: 12px">
+        返回首页：<a href="/">/</a>
+      </p>
+    </div>
   </body>
 </html>
+

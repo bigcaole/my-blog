@@ -166,6 +166,29 @@ featured: true
 - 文章目录：`src/content/blog/`
 - 图片上传：`public/uploads`（访问路径 `/uploads`）
 
+### 真实性与落地性校验（建议先看）
+
+为了避免“文档写了但功能不存在”的坑，你可以直接在仓库里核对这些文件是否存在（它们就是功能落地的证据）：
+
+- Decap 后台文件：
+  - `public/admin/index.html`
+  - `public/admin/config.yml`
+  - `public/admin/backup.html`
+- 内容与设置：
+  - `src/content/blog/`（文章目录）
+  - `src/content/settings/site.json`（后台可编辑的站点设置文件）
+  - `src/content/config.ts`（collections schema，含 `blog` 与 `settings`）
+  - `src/config/site.ts`（读取 settings 覆盖默认值）
+- 自动化工作流（GitHub Actions）：
+  - `.github/workflows/docker-image.yml`（构建并推送 GHCR 镜像）
+  - `.github/workflows/publish-post-from-issue.yml`（Issue 发文）
+  - `.github/workflows/backup-snapshot.yml`（备份快照）
+  - `.github/workflows/restore-from-ref.yml`（从 ref 恢复并发 PR）
+- OAuth Proxy（线上 GitHub 登录需要）：
+  - `docker-compose.oauth-proxy.yml`
+
+如果上述文件缺失/被改名，相应功能就不会工作——请先恢复文件或按需调整文档。
+
 ### 自定义后台入口（可选）
 
 如果你希望把后台入口从 `/admin` 改成更“私密”的路径（例如 `/0emo-admin`），本项目支持通过环境变量生成一个同内容的后台入口（不破坏默认 `/admin`）：
@@ -216,11 +239,11 @@ npx decap-server
 
 - `http://localhost:4321/admin`
 
-> 如果你更喜欢固定端口，也可以在本地后端启动参数中设置端口；默认一般是 `http://localhost:8081` 供 CMS 访问。
+> 本地后端端口以终端输出为准（常见是 `http://localhost:8081`）。如果访问异常，请优先看 `npx decap-server` 的控制台提示。
 
 ### 线上 GitHub 登录（需要 OAuth Proxy）
 
-Decap CMS 的 GitHub backend 在线上需要 OAuth 服务端。这里提供一个最简单可用、适配 1Panel + OpenResty 的方案：**同域名反向代理到 OAuth Proxy 容器**。
+Decap CMS 的 GitHub backend 在线上 **必须** 有 OAuth 服务端（不是可选项）。这里提供一个最简单可用、适配 1Panel + OpenResty 的方案：**同域名反向代理到 OAuth Proxy 容器**。
 
 #### 第 1 步：创建 GitHub OAuth App
 
@@ -266,8 +289,12 @@ docker compose -f docker-compose.oauth-proxy.yml up -d
 
 打开 `public/admin/config.yml`，把以下占位替换成你的实际域名：
 
-- `backend.base_url: "https://YOUR_DOMAIN/api/auth"`
 - `site_url: "https://YOUR_DOMAIN"`
+
+说明（避免踩坑）：
+
+- `backend.base_url` 已改为相对路径：`/api/auth`，这样即使你忘了替换域名占位，也不会跳转到错误的 `your_domain`。
+- 你仍需要确保反代存在：`/api/auth/` → `http://127.0.0.1:4000/`。
 
 然后访问：
 
@@ -290,6 +317,13 @@ Decap CMS 里提供了「设置」集合，会编辑单文件：
 - `/admin` 是公开可访问的登录入口，但只有完成 GitHub 授权的人才能提交内容
 - 建议 OAuth App 与仓库权限只给你自己的 GitHub 账号使用
 - 如果你希望更私密，可以在 OpenResty 对 `/admin` 加一层 Basic Auth（可选）
+
+### 标签（tags）使用建议（避免踩坑）
+
+标签来自文章 frontmatter 的 `tags` 数组，这是正确且轻量的做法。但为了避免 URL 变得难读或出现编码字符：
+
+- 建议优先使用：英文、数字、短横线（例如 `web-performance`）
+- 可以使用中文标签，但它在 URL 中会进行编码（例如 `%E6%...`），属于正常现象
 
 ## 备份与恢复（管理面板内）
 
