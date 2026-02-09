@@ -1,52 +1,409 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { SITE } from '../../config/site';
-import SectionTitle from '../../components/ui/SectionTitle.astro';
-import Card from '../../components/ui/Card.astro';
-import Button from '../../components/ui/Button.astro';
-import Icon from '../../components/ui/Icon.astro';
-import Badge from '../../components/ui/Badge.astro';
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Icon from "../../components/ui/Icon.astro";
+import siteSettings from "../../content/settings/site.json";
 
-const tools = SITE.tools.map((t) => ({
-  ...t,
-  href: t.status === 'active' ? `/tools/${t.slug}/` : `/tools/coming-soon/${t.slug}/`,
-}));
+type Tool = {
+  title: string;
+  slug: string;
+  description?: string;
+  status?: "live" | "wip";
+  iconKey?: string;
+};
+
+const tools = ((siteSettings as any).tools as Tool[] | undefined) ?? [];
+
+const title = "工具箱";
+const description = "一组极简但可用的小工具：IP 查询、Base64、Cron、UUID、子网掩码等。";
+
+function hrefOf(slug: string) {
+  return `/tools/${slug}`;
+}
 ---
 
-<BaseLayout title="工具箱" description="工具型站点：可立即使用的小工具集合。" canonical="/tools/">
-  <SectionTitle title="工具箱" description="极简但有层次：输入、按钮、结果与提示都尽量清晰。" barClass="border-emerald-500" />
+<BaseLayout title={title} description={description}>
+  <section class="mx-auto w-full max-w-5xl px-4 py-10">
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold tracking-tight" style="color: var(--text)">{title}</h1>
+      <p class="mt-2 max-w-2xl text-sm" style="color: var(--text-muted)">{description}</p>
+    </header>
 
-  <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {tools.map((t) => (
-      <Card class="p-5">
-        <div class="flex h-full flex-col">
-          <div class="flex items-start gap-3">
-            <div
-              class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white"
-              style="background: linear-gradient(135deg, var(--primary), var(--accent));"
-            >
-              <Icon name={t.icon} />
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <h2 class="truncate text-sm font-semibold">{t.title}</h2>
-                {t.status !== 'active' ? <Badge variant="accent">开发中</Badge> : null}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {tools.map((t) => {
+        const status = t.status ?? "live";
+        const live = status === "live";
+        const iconName = (t.iconKey || "wrench") as any;
+        return (
+          <article
+            class="group rounded-2xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            style="background: var(--bg-elev-1); border-color: var(--border)"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div
+                  class="grid h-10 w-10 place-items-center rounded-2xl border"
+                  style="background: var(--bg-elev-2); border-color: var(--border); color: var(--primary)"
+                >
+                  <Icon name={iconName} size={18} />
+                </div>
+                <div>
+                  <h2 class="text-base font-semibold" style="color: var(--text)">{t.title}</h2>
+                  <p class="mt-0.5 text-xs" style="color: var(--text-muted)">{live ? "可用" : "开发中"}</p>
+                </div>
               </div>
-              <p class="mt-1 text-sm" style="color: var(--text-muted)">{t.description}</p>
+              <span
+                class="rounded-full border px-2 py-1 text-xs"
+                style={`border-color: var(--border); color: ${live ? "var(--accent)" : "var(--text-muted)"}; background: var(--bg-elev-2)`}
+              >
+                {live ? "Live" : "WIP"}
+              </span>
             </div>
-          </div>
 
-          <div class="mt-4 flex-1"></div>
-          <div class="mt-4 flex gap-2">
-            <Button variant="primary" href={t.href}>
-              {t.status === 'active' ? '打开' : '查看'} <Icon name="arrow-right" size={16} />
-            </Button>
-            <Button variant="secondary" href={t.href}>
-              详情
-            </Button>
-          </div>
-        </div>
-      </Card>
-    ))}
-  </div>
+            <p class="mt-3 text-sm leading-relaxed" style="color: var(--text-muted)">
+              {t.description || "—"}
+            </p>
+
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              {live ? (
+                <a
+                  class="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition active:scale-[0.98]"
+                  style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white"
+                  href={hrefOf(t.slug)}
+                >
+                  进入
+                  <span aria-hidden="true">→</span>
+                </a>
+              ) : (
+                <span
+                  class="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm"
+                  style="border-color: var(--border); color: var(--text-muted)"
+                >
+                  开发中
+                </span>
+              )}
+
+              {/* Quick embeds */}
+              {t.slug === "base64" ? (
+                <details class="w-full">
+                  <summary
+                    class="mt-2 cursor-pointer select-none rounded-xl border px-3 py-2 text-sm transition hover:bg-[var(--bg-elev-2)]"
+                    style="border-color: var(--border); color: var(--text)"
+                  >
+                    快速使用（Base64）
+                  </summary>
+                  <div
+                    class="mt-3 rounded-xl border p-3"
+                    style="border-color: var(--border); background: var(--bg-elev-2)"
+                    data-base64
+                  >
+                    <textarea
+                      class="min-h-[88px] w-full resize-y rounded-xl border px-3 py-2 text-sm outline-none"
+                      style="background: var(--bg-elev-1); border-color: var(--border); color: var(--text)"
+                      placeholder="输入内容…"
+                      data-in
+                    ></textarea>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition active:scale-[0.98]"
+                        style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white"
+                        data-enc
+                      >
+                        编码
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-elev-1)]"
+                        style="border-color: var(--border); color: var(--text)"
+                        data-dec
+                      >
+                        解码
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-elev-1)]"
+                        style="border-color: var(--border); color: var(--text)"
+                        data-copy
+                      >
+                        复制结果
+                      </button>
+                    </div>
+                    <textarea
+                      class="mt-2 min-h-[88px] w-full resize-y rounded-xl border px-3 py-2 text-sm outline-none"
+                      style="background: var(--bg-elev-1); border-color: var(--border); color: var(--text)"
+                      placeholder="结果…"
+                      readonly
+                      data-out
+                    ></textarea>
+                    <p class="mt-2 hidden text-sm" style="color: #ef4444" data-err aria-live="polite"></p>
+                    <p class="mt-2 hidden text-sm" style="color: var(--text-muted)" data-ok aria-live="polite">已复制。</p>
+                  </div>
+                </details>
+              ) : null}
+
+              {t.slug === "cron" ? (
+                <details class="w-full">
+                  <summary
+                    class="mt-2 cursor-pointer select-none rounded-xl border px-3 py-2 text-sm transition hover:bg-[var(--bg-elev-2)]"
+                    style="border-color: var(--border); color: var(--text)"
+                  >
+                    快速使用（Cron）
+                  </summary>
+                  <div
+                    class="mt-3 rounded-xl border p-3"
+                    style="border-color: var(--border); background: var(--bg-elev-2)"
+                    data-cron
+                  >
+                    <input
+                      class="w-full rounded-xl border px-3 py-2 text-sm outline-none"
+                      style="background: var(--bg-elev-1); border-color: var(--border); color: var(--text)"
+                      placeholder="例如：*/5 * * * *"
+                      value="*/5 * * * *"
+                      data-expr
+                    />
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="rounded-xl px-3 py-2 text-sm font-medium shadow-sm transition active:scale-[0.98]"
+                        style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white"
+                        data-run
+                      >
+                        计算
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-elev-1)]"
+                        style="border-color: var(--border); color: var(--text)"
+                        data-copy
+                      >
+                        复制结果
+                      </button>
+                    </div>
+                    <p class="mt-2 hidden text-sm" style="color: #ef4444" data-err aria-live="polite"></p>
+                    <ol class="mt-2 grid gap-2 text-sm" data-list></ol>
+                  </div>
+                </details>
+              ) : null}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  </section>
+
+  <script>
+    // Base64 quick tool
+    for (const root of document.querySelectorAll("[data-base64]")) {
+      const $in = root.querySelector("[data-in]");
+      const $out = root.querySelector("[data-out]");
+      const $err = root.querySelector("[data-err]");
+      const $ok = root.querySelector("[data-ok]");
+
+      const showErr = (msg) => {
+        $err.textContent = msg;
+        $err.classList.remove("hidden");
+        $ok.classList.add("hidden");
+      };
+      const clear = () => {
+        $err.textContent = "";
+        $err.classList.add("hidden");
+        $ok.classList.add("hidden");
+      };
+
+      const bytesToBase64 = (bytes) => {
+        let bin = "";
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin);
+      };
+      const base64ToBytes = (b64) => {
+        const bin = atob((b64 || "").trim());
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      };
+      const enc = (str) => bytesToBase64(new TextEncoder().encode(str || ""));
+      const dec = (b64) => new TextDecoder().decode(base64ToBytes(b64));
+
+      root.querySelector("[data-enc]").addEventListener("click", () => {
+        clear();
+        try {
+          $out.value = enc($in.value);
+        } catch (e) {
+          showErr("编码失败：请检查输入内容。");
+        }
+      });
+      root.querySelector("[data-dec]").addEventListener("click", () => {
+        clear();
+        try {
+          $out.value = dec($in.value);
+        } catch (e) {
+          showErr("解码失败：Base64 格式可能不正确。");
+        }
+      });
+      root.querySelector("[data-copy]").addEventListener("click", async () => {
+        clear();
+        try {
+          await navigator.clipboard.writeText($out.value || "");
+          $ok.classList.remove("hidden");
+          window.setTimeout(() => $ok.classList.add("hidden"), 1200);
+        } catch (e) {
+          showErr("复制失败：请手动选择并复制结果。");
+        }
+      });
+    }
+
+    // Cron quick tool (simple minute-by-minute scan)
+    function parseField(src, min, max, map7to0) {
+      const trimmed = (src || "").trim();
+      if (!trimmed) return null;
+      const values = new Set();
+      const any = trimmed === "*";
+      if (any) {
+        for (let i = min; i <= max; i++) values.add(i);
+        return { any: true, values };
+      }
+      const parts = trimmed.split(",");
+      for (const part0 of parts) {
+        const part = part0.trim();
+        if (!part) return null;
+        let base = part;
+        let step = 1;
+        if (part.includes("/")) {
+          const segs = part.split("/");
+          if (segs.length !== 2) return null;
+          base = segs[0].trim();
+          step = Number(segs[1]);
+          if (!Number.isFinite(step) || step <= 0) return null;
+        }
+        const addVal = (v) => {
+          let vv = v;
+          if (map7to0 && vv === 7) vv = 0;
+          if (vv < min || vv > max) return false;
+          values.add(vv);
+          return true;
+        };
+        if (base === "*" || base === "") {
+          for (let v = min; v <= max; v += step) if (!addVal(v)) return null;
+          continue;
+        }
+        if (base.includes("-")) {
+          const segs = base.split("-");
+          if (segs.length !== 2) return null;
+          const a = Number(segs[0]);
+          const b = Number(segs[1]);
+          if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+          const start = Math.min(a, b);
+          const end = Math.max(a, b);
+          for (let v = start; v <= end; v += step) if (!addVal(v)) return null;
+          continue;
+        }
+        const n = Number(base);
+        if (!Number.isFinite(n)) return null;
+        if (!addVal(n)) return null;
+      }
+      if (values.size === 0) return null;
+      return { any: false, values };
+    }
+
+    function matchCron(date, cron) {
+      const m = date.getMinutes();
+      const h = date.getHours();
+      const dom = date.getDate();
+      const mon = date.getMonth() + 1;
+      const dow = date.getDay();
+      if (!cron.min.values.has(m)) return false;
+      if (!cron.hour.values.has(h)) return false;
+      if (!cron.month.values.has(mon)) return false;
+      const domAny = cron.dom.any;
+      const dowAny = cron.dow.any;
+      const domMatch = cron.dom.values.has(dom);
+      const dowMatch = cron.dow.values.has(dow);
+      let dayOk = true;
+      if (domAny && dowAny) dayOk = true;
+      else if (domAny) dayOk = dowMatch;
+      else if (dowAny) dayOk = domMatch;
+      else dayOk = domMatch || dowMatch;
+      return dayOk;
+    }
+
+    function computeNext(expr) {
+      const parts = (expr || "").trim().split(/\s+/);
+      if (parts.length !== 5) throw new Error("Cron 必须是 5 段：分 时 日 月 周");
+      const minF = parseField(parts[0], 0, 59, false);
+      const hourF = parseField(parts[1], 0, 23, false);
+      const domF = parseField(parts[2], 1, 31, false);
+      const monthF = parseField(parts[3], 1, 12, false);
+      const dowF = parseField(parts[4], 0, 6, true);
+      if (!minF || !hourF || !domF || !monthF || !dowF) throw new Error("Cron 格式不合法（仅支持数字、*、逗号、范围、步进）");
+      const cron = { min: minF, hour: hourF, dom: domF, month: monthF, dow: dowF };
+      const out = [];
+      const now = new Date();
+      now.setSeconds(0, 0);
+      let t = new Date(now.getTime() + 60_000);
+      const maxIter = 60 * 24 * 370;
+      for (let i = 0; i < maxIter && out.length < 5; i++) {
+        if (matchCron(t, cron)) out.push(new Date(t));
+        t = new Date(t.getTime() + 60_000);
+      }
+      return out;
+    }
+
+    for (const root of document.querySelectorAll("[data-cron]")) {
+      const $expr = root.querySelector("[data-expr]");
+      const $err = root.querySelector("[data-err]");
+      const $list = root.querySelector("[data-list]");
+
+      const clear = () => {
+        $err.textContent = "";
+        $err.classList.add("hidden");
+      };
+      const showErr = (msg) => {
+        $err.textContent = msg;
+        $err.classList.remove("hidden");
+      };
+      const render = (items) => {
+        $list.innerHTML = "";
+        if (!items.length) {
+          const li = document.createElement("li");
+          li.textContent = "未找到未来触发时间（请检查表达式）。";
+          li.style.color = "var(--text-muted)";
+          $list.appendChild(li);
+          return;
+        }
+        for (const d of items) {
+          const li = document.createElement("li");
+          li.className = "rounded-lg border px-3 py-2";
+          li.style.borderColor = "var(--border)";
+          li.style.background = "var(--bg-elev-1)";
+          li.style.color = "var(--text)";
+          li.textContent = d.toLocaleString();
+          $list.appendChild(li);
+        }
+      };
+
+      const run = () => {
+        clear();
+        try {
+          render(computeNext($expr.value));
+        } catch (e) {
+          showErr(e && e.message ? e.message : "计算失败：请检查 Cron 表达式。");
+          render([]);
+        }
+      };
+
+      root.querySelector("[data-run]").addEventListener("click", run);
+      root.querySelector("[data-copy]").addEventListener("click", async () => {
+        clear();
+        try {
+          const text = [...$list.querySelectorAll("li")].map((li) => li.textContent).join("\n");
+          await navigator.clipboard.writeText(text);
+        } catch (e) {
+          showErr("复制失败：请手动复制。");
+        }
+      });
+
+      run();
+    }
+  </script>
 </BaseLayout>
+
