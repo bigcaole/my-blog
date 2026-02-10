@@ -40,7 +40,7 @@ const items = tools.slice(0, limit).map((t) => ({
             <div class="min-w-0">
               <div class="flex items-center gap-2">
                 <div class="truncate text-sm font-semibold">{t.title}</div>
-                {t.status !== 'active' ? <Badge variant="accent">开发中</Badge> : null}
+                {t.status !== 'live' ? <Badge variant="accent">开发中</Badge> : null}
               </div>
               <p class="mt-1 text-sm" style="color: var(--text-muted)">{t.description}</p>
             </div>
@@ -48,8 +48,8 @@ const items = tools.slice(0, limit).map((t) => ({
 
           <div class="mt-4 flex-1"></div>
           <div class="mt-4">
-            <Button variant={t.status === 'active' ? 'primary' : 'secondary'} href={t.href}>
-              {t.status === 'active' ? '进入' : '查看'} <Icon name="arrow-right" size={16} />
+            <Button variant={t.status === 'live' ? 'primary' : 'secondary'} href={t.href}>
+              {t.status === 'live' ? '进入' : '查看'} <Icon name="arrow-right" size={16} />
             </Button>
           </div>
         </div>
