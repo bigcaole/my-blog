@@ -1,0 +1,65 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "Htaccess / Nginx 配置生成器";
+const description = "勾选 301 重定向、HTTPS 强制跳转、防盗链等需求，自动生成服务器配置片段。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-[360px_1fr]">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="grid gap-2 text-sm" style="color: var(--text)">服务器
+        <select id="server" class="ui-input">
+          <option value="nginx">Nginx</option>
+          <option value="apache">.htaccess</option>
+        </select>
+      </label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">目标域名
+        <input id="domain" class="ui-input" value="example.com" />
+      </label>
+      <div class="mt-4 grid gap-3 text-sm" style="color: var(--text)">
+        <label class="flex items-center gap-2"><input type="checkbox" id="https" checked /> 强制 HTTPS</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="www" /> 非 www 跳转到 www</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="cache" checked /> 静态资源缓存</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="hotlink" /> 图片防盗链</label>
+      </div>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="mb-2 flex items-center justify-between">
+        <div class="text-sm font-medium" style="color: var(--text)">配置片段</div>
+        <button id="copy" class="ui-btn ui-btn--secondary" type="button">复制</button>
+      </div>
+      <pre id="out" class="min-h-[360px] overflow-auto rounded-xl border p-3 text-sm" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"></pre>
+    </section>
+  </div>
+
+  <script is:inline>
+    const ids = ["server", "domain", "https", "www", "cache", "hotlink"];
+    const $ = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+    const out = document.getElementById("out");
+    function nginx(domain) {
+      const lines = ["server {", "    listen 80;", `    server_name ${$.www.checked ? domain : `${domain} www.${domain}`};`];
+      if ($.https.checked) lines.push(`    return 301 https://${$.www.checked ? `www.${domain}` : "$host"}$request_uri;`, "}", "", "server {", "    listen 443 ssl http2;", `    server_name ${$.www.checked ? `www.${domain}` : domain};`);
+      if ($.cache.checked) lines.push("", "    location ~* \\.(?:css|js|jpg|jpeg|gif|png|svg|webp|ico)$ {", "        expires 30d;", "        add_header Cache-Control \"public, immutable\";", "    }");
+      if ($.hotlink.checked) lines.push("", "    location ~* \\.(?:jpg|jpeg|png|gif|webp)$ {", `        valid_referers none blocked ${domain} *.${domain};`, "        if ($invalid_referer) { return 403; }", "    }");
+      lines.push("}");
+      return lines.join("\n");
+    }
+    function apache(domain) {
+      const lines = ["RewriteEngine On"];
+      if ($.https.checked) lines.push("RewriteCond %{HTTPS} !=on", "RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]");
+      if ($.www.checked) lines.push(`RewriteCond %{HTTP_HOST} !^www\\. [NC]`, `RewriteRule ^ https://www.${domain}%{REQUEST_URI} [L,R=301]`);
+      if ($.hotlink.checked) lines.push("", "RewriteCond %{HTTP_REFERER} !^$", `RewriteCond %{HTTP_REFERER} !^https?://(www\\.)?${domain}/ [NC]`, "RewriteRule \\.(jpg|jpeg|png|gif|webp)$ - [F,NC,L]");
+      if ($.cache.checked) lines.push("", "<IfModule mod_expires.c>", "  ExpiresActive On", "  ExpiresByType text/css \"access plus 30 days\"", "  ExpiresByType application/javascript \"access plus 30 days\"", "  ExpiresByType image/png \"access plus 30 days\"", "</IfModule>");
+      return lines.join("\n");
+    }
+    function render() {
+      const domain = $.domain.value.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "") || "example.com";
+      out.textContent = $.server.value === "nginx" ? nginx(domain) : apache(domain);
+    }
+    ids.forEach((id) => $[id].addEventListener("input", render));
+    ids.forEach((id) => $[id].addEventListener("change", render));
+    document.getElementById("copy").addEventListener("click", () => navigator.clipboard.writeText(out.textContent || ""));
+    render();
+  </script>
+</ToolLayout>

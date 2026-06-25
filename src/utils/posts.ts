@@ -20,14 +20,14 @@ export function getFeaturedPosts<T extends { data: { featured?: boolean } }>(pos
   return posts.filter((p) => !!p.data.featured);
 }
 
-export function pickRelatedPosts<T extends { slug: string; data: { tags: string[] } }>(
+export function pickRelatedPosts<T extends { id: string; data: { tags: string[] } }>(
   all: T[],
   current: T,
   limit = 3,
 ) {
   const currentTags = new Set(current.data.tags ?? []);
   return all
-    .filter((p) => p.slug !== current.slug)
+    .filter((p) => p.id !== current.id)
     .map((p) => ({
       p,
       score: (p.data.tags ?? []).reduce((acc, t) => acc + (currentTags.has(t) ? 1 : 0), 0),

@@ -1,16 +1,11 @@
 import { defineConfig } from 'astro/config';
-import tailwind from '@astrojs/tailwind';
 
 import { SITE } from './src/config/site';
 
 export default defineConfig({
   site: SITE.url,
   output: 'static',
-  integrations: [
-    tailwind({
-      applyBaseStyles: false,
-    }),
-  ],
+  integrations: [],
   markdown: {
     shikiConfig: {
       themes: {
@@ -19,6 +14,5 @@ export default defineConfig({
       },
       wrap: true,
     },
-    smartypants: true,
   },
 });

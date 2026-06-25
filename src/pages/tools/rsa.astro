@@ -1,0 +1,57 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import PrivacyNotice from "../../components/tools/PrivacyNotice.astro";
+
+const title = "RSA 密钥对生成器";
+const description = "使用浏览器 Web Crypto 生成 RSA 公钥和私钥，可选择 1024、2048、4096 位长度。";
+---
+
+<ToolLayout title={title} description={description}>
+  <PrivacyNotice>密钥在浏览器本地生成，不会上传到服务器。生产环境建议至少使用 2048 位，并妥善保管私钥。</PrivacyNotice>
+  <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <label class="grid gap-2 text-sm sm:w-48" style="color: var(--text)">密钥长度
+        <select id="bits" class="ui-input"><option>2048</option><option>1024</option><option>4096</option></select>
+      </label>
+      <button id="gen" class="ui-btn ui-btn--primary" type="button">生成密钥对</button>
+      <button id="copy" class="ui-btn ui-btn--secondary" type="button">复制全部</button>
+    </div>
+    <p id="status" class="mt-3 text-sm" style="color: var(--text-muted)"></p>
+  </section>
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">Public Key</div>
+      <textarea id="pub" class="mt-2 min-h-[320px] w-full resize-y rounded-xl border p-3 font-mono text-xs outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly></textarea>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">Private Key</div>
+      <textarea id="priv" class="mt-2 min-h-[320px] w-full resize-y rounded-xl border p-3 font-mono text-xs outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly></textarea>
+    </section>
+  </div>
+
+  <script is:inline>
+    const pub = document.getElementById("pub");
+    const priv = document.getElementById("priv");
+    const status = document.getElementById("status");
+    function pem(buffer, label) {
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (const b of bytes) binary += String.fromCharCode(b);
+      const b64 = btoa(binary).match(/.{1,64}/g).join("\n");
+      return `-----BEGIN ${label}-----\n${b64}\n-----END ${label}-----`;
+    }
+    document.getElementById("gen").addEventListener("click", async () => {
+      status.textContent = "正在生成，请稍候...";
+      const bits = Number(document.getElementById("bits").value);
+      try {
+        const key = await crypto.subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: bits, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["sign", "verify"]);
+        pub.value = pem(await crypto.subtle.exportKey("spki", key.publicKey), "PUBLIC KEY");
+        priv.value = pem(await crypto.subtle.exportKey("pkcs8", key.privateKey), "PRIVATE KEY");
+        status.textContent = "密钥已生成。";
+      } catch (err) {
+        status.textContent = "生成失败：当前浏览器可能不支持该密钥长度。";
+      }
+    });
+    document.getElementById("copy").addEventListener("click", () => navigator.clipboard.writeText(`${pub.value}\n\n${priv.value}`));
+  </script>
+</ToolLayout>

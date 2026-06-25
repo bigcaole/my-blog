@@ -38,19 +38,6 @@ import ThemeToggle from './ThemeToggle.astro';
     </div>
 
     <div class="flex items-center gap-2">
-      {SITE.social.github ? (
-        <Button
-          variant="ghost"
-          href={SITE.social.github}
-          target="_blank"
-          rel="noreferrer"
-          class="h-9 w-9 px-0 text-[var(--text-muted)] hover:text-[var(--primary)]"
-          aria-label="GitHub"
-          title="GitHub"
-        >
-          <Icon name="github" />
-        </Button>
-      ) : null}
       {SITE.social.telegram ? (
         <Button
           variant="ghost"
@@ -62,6 +49,17 @@ import ThemeToggle from './ThemeToggle.astro';
           title="Telegram"
         >
           <Icon name="telegram" />
+        </Button>
+      ) : null}
+      {SITE.social.email ? (
+        <Button
+          variant="ghost"
+          href={`mailto:${SITE.social.email}`}
+          class="h-9 w-9 px-0 text-[var(--text-muted)] hover:text-[var(--primary)]"
+          aria-label="Gmail"
+          title="Gmail"
+        >
+          <Icon name="mail" />
         </Button>
       ) : null}
 
@@ -92,14 +90,14 @@ import ThemeToggle from './ThemeToggle.astro';
         ))}
       </div>
       <div class="mt-3 flex flex-wrap gap-2">
-        {SITE.social.github ? (
-          <Button variant="secondary" href={SITE.social.github} target="_blank" rel="noreferrer">
-            <Icon name="github" size={16} /> GitHub
-          </Button>
-        ) : null}
         {SITE.social.telegram ? (
           <Button variant="secondary" href={SITE.social.telegram} target="_blank" rel="noreferrer">
-            <Icon name="telegram" size={16} /> Telegram
+            <Icon name="telegram" size={16} /> @miss_lin_bot
+          </Button>
+        ) : null}
+        {SITE.social.email ? (
+          <Button variant="secondary" href={`mailto:${SITE.social.email}`}>
+            <Icon name="mail" size={16} /> Gmail
           </Button>
         ) : null}
       </div>

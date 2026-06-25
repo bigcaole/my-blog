@@ -1,0 +1,48 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "User-Agent 解析";
+const description = "解析浏览器、操作系统和设备类型；默认填入当前浏览器 UA。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-[1fr_360px]">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="text-sm font-medium" style="color: var(--text)" for="ua">User-Agent</label>
+      <textarea id="ua" class="mt-2 min-h-[220px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"></textarea>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="parse" class="ui-btn ui-btn--primary" type="button">解析</button>
+        <button id="current" class="ui-btn ui-btn--secondary" type="button">当前浏览器</button>
+      </div>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">结果</div>
+      <dl id="out" class="mt-3 grid gap-2 text-sm"></dl>
+    </section>
+  </div>
+
+  <script is:inline>
+    const ua = document.getElementById("ua");
+    const out = document.getElementById("out");
+    function detect(s) {
+      const browser = /Edg\/([\d.]+)/.exec(s)?.[1] ? `Edge ${/Edg\/([\d.]+)/.exec(s)[1]}` :
+        /Chrome\/([\d.]+)/.exec(s)?.[1] ? `Chrome ${/Chrome\/([\d.]+)/.exec(s)[1]}` :
+        /Firefox\/([\d.]+)/.exec(s)?.[1] ? `Firefox ${/Firefox\/([\d.]+)/.exec(s)[1]}` :
+        /Version\/([\d.]+).*Safari/.exec(s)?.[1] ? `Safari ${/Version\/([\d.]+).*Safari/.exec(s)[1]}` : "未知";
+      const os = /Windows NT/.test(s) ? "Windows" : /Mac OS X/.test(s) ? "macOS / iOS" : /Android/.test(s) ? "Android" : /Linux/.test(s) ? "Linux" : "未知";
+      const device = /Mobile|iPhone|Android/.test(s) ? "移动设备" : /Tablet|iPad/.test(s) ? "平板" : "桌面设备";
+      const engine = /AppleWebKit/.test(s) ? "WebKit / Blink" : /Gecko\//.test(s) ? "Gecko" : "未知";
+      return { browser, os, device, engine };
+    }
+    function row(k, v) {
+      return `<div class="grid gap-1 rounded-xl border px-3 py-2" style="border-color: var(--border); background: var(--bg-elev-2)"><dt style="color: var(--text-muted)">${k}</dt><dd style="color: var(--text)">${v}</dd></div>`;
+    }
+    function parse() {
+      const data = detect(ua.value);
+      out.innerHTML = Object.entries(data).map(([k, v]) => row(k, v)).join("");
+    }
+    document.getElementById("current").addEventListener("click", () => { ua.value = navigator.userAgent; parse(); });
+    document.getElementById("parse").addEventListener("click", parse);
+    document.getElementById("current").click();
+  </script>
+</ToolLayout>

@@ -5,7 +5,6 @@ import Card from '../../components/ui/Card.astro';
 import Icon from '../../components/ui/Icon.astro';
 import { getAllPosts, getTagCounts } from '../../utils/posts';
 import PostCard from '../../components/post/PostCard.astro';
-import Input from '../../components/ui/Input.astro';
 
 const posts = await getAllPosts();
 const tagCounts = getTagCounts(posts);

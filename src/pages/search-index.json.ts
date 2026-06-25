@@ -6,7 +6,7 @@ export async function GET() {
     title: p.data.title,
     description: p.data.description,
     tags: p.data.tags,
-    url: `/posts/${p.slug}/`,
+    url: `/posts/${p.id}/`,
     date: p.data.date.toISOString(),
   }));
 
@@ -17,4 +17,3 @@ export async function GET() {
     },
   });
 }
-

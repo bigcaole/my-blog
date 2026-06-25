@@ -5,6 +5,8 @@ export type ToolItem = {
   description?: string;
   icon?: string;
   status?: 'live' | 'coming-soon';
+  category?: 'developer' | 'network' | 'text' | 'security' | 'design';
+  keywords?: string[];
 };
 
 export type SiteSettingsFile = {
@@ -13,7 +15,15 @@ export type SiteSettingsFile = {
   description?: string;
   nav?: { label: string; href: string }[];
   social?: { github?: string; telegram?: string; x?: string; email?: string };
-  tools?: { title: string; slug: string; description?: string; status?: 'live' | 'coming-soon'; iconKey?: string }[];
+  tools?: {
+    title: string;
+    slug: string;
+    description?: string;
+    status?: 'live' | 'coming-soon';
+    iconKey?: string;
+    category?: ToolItem['category'];
+    keywords?: string[];
+  }[];
   seo?: { twitterHandle?: string; ogImage?: string };
 };
 
@@ -160,6 +170,8 @@ function mergeSite(defaultSite: SiteConfig, s: SiteSettingsFile | null | undefin
         description: pickString(t.description) ?? '',
         status: t.status === 'coming-soon' ? 'coming-soon' : 'live',
         icon: pickString(t.iconKey) ?? '',
+        category: t.category,
+        keywords: Array.isArray(t.keywords) ? t.keywords.filter((x): x is string => typeof x === 'string') : [],
       }));
   }
 
@@ -176,7 +188,6 @@ function mergeSite(defaultSite: SiteConfig, s: SiteSettingsFile | null | undefin
 // Settings override:
 // - The file exists in-repo and is edited via Decap CMS.
 // - Keep this module free of Node-only APIs to reduce build fragility in Vite/SSR contexts.
-// @ts-expect-error - JSON import is handled by Astro/Vite.
 import settings from '../content/settings/site.json';
 
 // Keep backward-compatible import style: `import { SITE } from '../config/site'`

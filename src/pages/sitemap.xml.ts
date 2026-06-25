@@ -16,7 +16,7 @@ export async function GET() {
   for (const p of posts) for (const t of p.data.tags) tags.add(t);
 
   const toolRoutes = SITE.tools
-    .filter((t) => t.status === 'active')
+    .filter((t) => t.status === 'live')
     .map((t) => `/tools/${t.slug}/`);
 
   const staticRoutes = ['/', '/posts/', '/tags/', '/tools/', '/about/', ...toolRoutes];
@@ -30,7 +30,7 @@ export async function GET() {
 
   for (const p of posts) {
     urls.push({
-      loc: new URL(`/posts/${p.slug}/`, SITE.url).toString(),
+      loc: new URL(`/posts/${p.id}/`, SITE.url).toString(),
       lastmod: p.data.date.toISOString(),
     });
   }

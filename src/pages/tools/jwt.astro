@@ -1,0 +1,63 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import PrivacyNotice from "../../components/tools/PrivacyNotice.astro";
+
+const title = "JWT 解析器";
+const description = "解析 JSON Web Token 的 Header 与 Payload。请不要输入包含真实密钥、权限或隐私信息的敏感 Token。";
+---
+
+<ToolLayout title={title} description={description}>
+  <PrivacyNotice>JWT 仅在浏览器本地解析，不会主动上传数据；请不要粘贴包含真实权限、隐私信息或生产密钥的 Token。</PrivacyNotice>
+  <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+    <label class="text-sm font-medium" for="token" style="color: var(--text)">JWT</label>
+    <textarea id="token" class="mt-2 min-h-[140px] w-full resize-y rounded-xl border p-3 font-mono text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button id="decode" type="button" class="ui-btn ui-btn--primary">解析</button>
+      <button id="clear" type="button" class="ui-btn ui-btn--secondary">清空</button>
+    </div>
+    <p id="error" class="mt-3 hidden text-sm" style="color: #ef4444"></p>
+  </section>
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">Header</div>
+      <pre id="header" class="mt-2 min-h-[220px] overflow-auto rounded-xl border p-3 text-sm" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"></pre>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">Payload</div>
+      <pre id="payload" class="mt-2 min-h-[220px] overflow-auto rounded-xl border p-3 text-sm" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"></pre>
+    </section>
+  </div>
+
+  <script is:inline>
+    const token = document.getElementById("token");
+    const header = document.getElementById("header");
+    const payload = document.getElementById("payload");
+    const error = document.getElementById("error");
+    function decodePart(part) {
+      const normalized = part.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(part.length / 4) * 4, "=");
+      const bytes = Uint8Array.from(atob(normalized), (c) => c.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+    function run() {
+      error.classList.add("hidden");
+      try {
+        const parts = token.value.trim().split(".");
+        if (parts.length < 2) throw new Error("JWT 至少应包含 Header 和 Payload 两段。");
+        header.textContent = JSON.stringify(decodePart(parts[0]), null, 2);
+        payload.textContent = JSON.stringify(decodePart(parts[1]), null, 2);
+      } catch (err) {
+        error.textContent = err.message || "解析失败。";
+        error.classList.remove("hidden");
+        header.textContent = "";
+        payload.textContent = "";
+      }
+    }
+    document.getElementById("decode").addEventListener("click", run);
+    document.getElementById("clear").addEventListener("click", () => {
+      token.value = "";
+      header.textContent = "";
+      payload.textContent = "";
+      error.classList.add("hidden");
+    });
+  </script>
+</ToolLayout>

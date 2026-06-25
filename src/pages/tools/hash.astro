@@ -1,0 +1,56 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import PrivacyNotice from "../../components/tools/PrivacyNotice.astro";
+
+const title = "哈希计算器";
+const description = "纯前端实时计算 MD5、SHA-1、SHA-256、SHA-512，输入内容不会上传到服务器。";
+---
+
+<ToolLayout title={title} description={description}>
+  <PrivacyNotice />
+  <div class="grid gap-4 lg:grid-cols-[1fr_420px]">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label for="input" class="text-sm font-medium" style="color: var(--text)">输入文本</label>
+      <textarea id="input" class="mt-2 min-h-[360px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" placeholder="输入要计算哈希的文本…">hello world</textarea>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">结果</div>
+      <dl id="out" class="mt-3 grid gap-2 text-sm"></dl>
+    </section>
+  </div>
+
+  <script>
+    // @ts-nocheck
+    const input = document.getElementById("input");
+    const out = document.getElementById("out");
+    const enc = new TextEncoder();
+    let hashLibs;
+    async function loadHashLibs() {
+      if (!hashLibs) {
+        const [legacy, sha2, utils] = await Promise.all([
+          import("@noble/hashes/legacy.js"),
+          import("@noble/hashes/sha2.js"),
+          import("@noble/hashes/utils.js"),
+        ]);
+        hashLibs = { ...legacy, ...sha2, bytesToHex: utils.bytesToHex };
+      }
+      return hashLibs;
+    }
+    function row(k, v) {
+      return `<div class="rounded-xl border p-3" style="border-color: var(--border); background: var(--bg-elev-2)"><dt style="color: var(--text-muted)">${k}</dt><dd class="mt-1 break-all font-mono" style="color: var(--text)">${v}</dd></div>`;
+    }
+    async function run() {
+      const { md5, sha1, sha256, sha512, bytesToHex } = await loadHashLibs();
+      const bytes = enc.encode(input.value || "");
+      out.innerHTML = '<div class="rounded-xl border p-3" style="border-color: var(--border); background: var(--bg-elev-2); color: var(--text-muted)">计算中...</div>';
+      out.innerHTML = [
+        ["MD5", bytesToHex(md5(bytes))],
+        ["SHA-1", bytesToHex(sha1(bytes))],
+        ["SHA-256", bytesToHex(sha256(bytes))],
+        ["SHA-512", bytesToHex(sha512(bytes))],
+      ].map(([k, v]) => row(k, v)).join("");
+    }
+    input.addEventListener("input", () => run());
+    run();
+  </script>
+</ToolLayout>

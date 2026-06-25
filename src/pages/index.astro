@@ -21,7 +21,7 @@ const tags = Array.from(tagCounts.entries())
   .map(([tag, count]) => ({ tag, count }))
   .sort((a, b) => b.count - a.count);
 
-const activeToolCount = SITE.tools.filter((t) => t.status === 'active').length;
+const activeToolCount = SITE.tools.filter((t) => t.status === 'live').length;
 const lastUpdated = posts[0]?.data.date ? formatDate(posts[0].data.date, SITE.locale) : '—';
 ---
 
@@ -41,4 +41,3 @@ const lastUpdated = posts[0]?.data.date ? formatDate(posts[0].data.date, SITE.lo
   <TagCloud tags={tags} />
   <SubscribeSection />
 </BaseLayout>
-

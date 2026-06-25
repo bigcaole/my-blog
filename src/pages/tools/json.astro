@@ -1,0 +1,93 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "JSON 格式化与校验";
+const description = "粘贴 JSON 字符串后，可一键美化、压缩，并显示语法错误位置。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <label class="text-sm font-medium" style="color: var(--text)" for="input">JSON 输入</label>
+        <button id="sample" type="button" class="ui-btn ui-btn--secondary">示例</button>
+      </div>
+      <textarea id="input" class="min-h-[360px] w-full resize-y rounded-xl border p-3 font-mono text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" spellcheck="false" placeholder='{"name":"0emo","tools":["json","url"]}'></textarea>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="format" type="button" class="ui-btn ui-btn--primary">美化</button>
+        <button id="minify" type="button" class="ui-btn ui-btn--secondary">压缩</button>
+        <button id="validate" type="button" class="ui-btn ui-btn--secondary">校验</button>
+        <button id="clear" type="button" class="ui-btn ui-btn--secondary">清空</button>
+      </div>
+      <p id="message" class="mt-3 hidden text-sm" aria-live="polite"></p>
+    </section>
+
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <div class="text-sm font-medium" style="color: var(--text)">输出</div>
+        <div class="flex gap-2">
+          <button id="copy" type="button" class="ui-btn ui-btn--secondary">复制</button>
+          <button type="button" class="ui-btn ui-btn--secondary" data-download-target="#output" data-filename="formatted.json" data-mime="application/json;charset=utf-8">下载</button>
+        </div>
+      </div>
+      <textarea id="output" class="min-h-[360px] w-full resize-y rounded-xl border p-3 font-mono text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly placeholder="结果会显示在这里…"></textarea>
+    </section>
+  </div>
+
+  <script is:inline>
+    const input = document.getElementById("input");
+    const output = document.getElementById("output");
+    const message = document.getElementById("message");
+
+    function setMessage(text, ok = true) {
+      message.textContent = text;
+      message.style.color = ok ? "var(--accent)" : "#ef4444";
+      message.classList.toggle("hidden", !text);
+    }
+
+    function parseJson() {
+      try {
+        const value = JSON.parse(input.value || "");
+        setMessage("JSON 语法正确。");
+        return value;
+      } catch (error) {
+        const msg = error?.message || "JSON 解析失败。";
+        const match = msg.match(/position\s+(\d+)/i);
+        if (match) {
+          const pos = Number(match[1]);
+          const before = input.value.slice(0, pos);
+          const line = before.split("\n").length;
+          const col = before.length - before.lastIndexOf("\n");
+          setMessage(`${msg}（第 ${line} 行，第 ${col} 列）`, false);
+        } else {
+          setMessage(msg, false);
+        }
+        return null;
+      }
+    }
+
+    document.getElementById("format").addEventListener("click", () => {
+      const value = parseJson();
+      if (value !== null) output.value = JSON.stringify(value, null, 2);
+    });
+    document.getElementById("minify").addEventListener("click", () => {
+      const value = parseJson();
+      if (value !== null) output.value = JSON.stringify(value);
+    });
+    document.getElementById("validate").addEventListener("click", parseJson);
+    document.getElementById("clear").addEventListener("click", () => {
+      input.value = "";
+      output.value = "";
+      setMessage("");
+    });
+    document.getElementById("sample").addEventListener("click", () => {
+      input.value = JSON.stringify({ site: "0emo博客", live: true, tools: ["JSON", "URL", "Regex"], nested: { count: 3 } });
+      output.value = "";
+      setMessage("");
+    });
+    document.getElementById("copy").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(output.value || "");
+      setMessage("已复制输出。");
+    });
+  </script>
+</ToolLayout>

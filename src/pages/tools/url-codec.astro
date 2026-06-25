@@ -1,0 +1,49 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "URL 编码/解码";
+const description = "对 URL、查询参数或任意文本进行 encodeURIComponent / decodeURIComponent 处理。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="text-sm font-medium" style="color: var(--text)" for="input">输入</label>
+      <textarea id="input" class="mt-2 min-h-[260px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" placeholder="https://example.com/search?q=中文 & symbols"></textarea>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="encComponent" type="button" class="ui-btn ui-btn--primary">编码参数</button>
+        <button id="decComponent" type="button" class="ui-btn ui-btn--secondary">解码参数</button>
+        <button id="encURI" type="button" class="ui-btn ui-btn--secondary">编码完整 URL</button>
+        <button id="decURI" type="button" class="ui-btn ui-btn--secondary">解码完整 URL</button>
+      </div>
+      <p id="error" class="mt-3 hidden text-sm" style="color: #ef4444" aria-live="polite"></p>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="mb-2 flex items-center justify-between">
+        <div class="text-sm font-medium" style="color: var(--text)">结果</div>
+        <button id="copy" type="button" class="ui-btn ui-btn--secondary">复制</button>
+      </div>
+      <textarea id="output" class="min-h-[260px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly></textarea>
+    </section>
+  </div>
+
+  <script is:inline>
+    const input = document.getElementById("input");
+    const output = document.getElementById("output");
+    const error = document.getElementById("error");
+    function run(fn) {
+      error.classList.add("hidden");
+      try {
+        output.value = fn(input.value || "");
+      } catch (err) {
+        error.textContent = "解码失败：输入中可能包含不完整的百分号编码。";
+        error.classList.remove("hidden");
+      }
+    }
+    document.getElementById("encComponent").addEventListener("click", () => run(encodeURIComponent));
+    document.getElementById("decComponent").addEventListener("click", () => run(decodeURIComponent));
+    document.getElementById("encURI").addEventListener("click", () => run(encodeURI));
+    document.getElementById("decURI").addEventListener("click", () => run(decodeURI));
+    document.getElementById("copy").addEventListener("click", () => navigator.clipboard.writeText(output.value || ""));
+  </script>
+</ToolLayout>

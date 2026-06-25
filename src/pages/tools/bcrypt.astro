@@ -1,0 +1,58 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import PrivacyNotice from "../../components/tools/PrivacyNotice.astro";
+
+const title = "Bcrypt 加密/比对";
+const description = "纯前端生成 Bcrypt Hash，并验证明文密码是否匹配指定 Hash。";
+---
+
+<ToolLayout title={title} description={description}>
+  <PrivacyNotice>Bcrypt 计算在浏览器本地完成，不会上传密码；轮数越高等待越久。请仅使用测试密码或脱敏数据。</PrivacyNotice>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <h2 class="text-sm font-medium" style="color: var(--text)">生成 Hash</h2>
+      <input id="password" class="ui-input mt-3" type="password" placeholder="输入明文密码" />
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">Salt rounds
+        <input id="rounds" class="ui-input" type="number" min="4" max="14" value="10" />
+      </label>
+      <button id="hash" class="ui-btn ui-btn--primary mt-4" type="button">生成</button>
+      <textarea id="hashOut" class="mt-3 min-h-[120px] w-full resize-y rounded-xl border p-3 font-mono text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly></textarea>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <h2 class="text-sm font-medium" style="color: var(--text)">比对验证</h2>
+      <input id="verifyPassword" class="ui-input mt-3" type="password" placeholder="输入明文密码" />
+      <textarea id="verifyHash" class="mt-3 min-h-[120px] w-full resize-y rounded-xl border p-3 font-mono text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" placeholder="粘贴 Bcrypt Hash"></textarea>
+      <button id="verify" class="ui-btn ui-btn--primary mt-4" type="button">比对</button>
+      <p id="status" class="mt-3 text-sm" style="color: var(--text-muted)"></p>
+    </section>
+  </div>
+
+  <script>
+    // @ts-nocheck
+    let bcryptLib;
+    async function loadBcrypt() {
+      if (!bcryptLib) {
+        const mod = await import("bcryptjs");
+        bcryptLib = mod.default || mod;
+      }
+      return bcryptLib;
+    }
+    document.getElementById("hash").addEventListener("click", async () => {
+      const status = document.getElementById("status");
+      status.textContent = "正在生成...";
+      const bcrypt = await loadBcrypt();
+      const rounds = Math.min(14, Math.max(4, Number(document.getElementById("rounds").value) || 10));
+      const hash = await bcrypt.hash(document.getElementById("password").value || "", rounds);
+      document.getElementById("hashOut").value = hash;
+      document.getElementById("verifyHash").value = hash;
+      status.textContent = "Hash 已生成。";
+    });
+    document.getElementById("verify").addEventListener("click", async () => {
+      const bcrypt = await loadBcrypt();
+      const ok = await bcrypt.compare(document.getElementById("verifyPassword").value || "", document.getElementById("verifyHash").value || "");
+      const status = document.getElementById("status");
+      status.textContent = ok ? "匹配成功。" : "不匹配。";
+      status.style.color = ok ? "var(--accent)" : "#ef4444";
+    });
+  </script>
+</ToolLayout>

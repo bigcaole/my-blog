@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20 <21" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "predev": "npm run cms:prepare",
     "prebuild": "npm run cms:prepare",
@@ -15,16 +17,25 @@
     "check": "astro check"
   },
   "dependencies": {
-    "@astrojs/rss": "^4.0.2",
-    "@astrojs/tailwind": "^6.0.2",
-    "astro": "^5.3.0"
+    "@astrojs/rss": "^4.0.18",
+    "@noble/hashes": "^2.2.0",
+    "astro": "^7.0.2",
+    "bcryptjs": "^3.0.3",
+    "js-beautify": "^1.15.4",
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.2",
     "@tailwindcss/typography": "^0.5.16",
-    "@types/node": "^20.11.30",
+    "@types/node": "^22.20.0",
+    "@types/qrcode": "^1.5.6",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "overrides": {
+    "yaml": "^2.9.0"
   }
 }

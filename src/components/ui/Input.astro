@@ -1,10 +1,10 @@
 ---
 type Props = {
   class?: string;
+  [key: string]: any;
 };
 
 const { class: extraClass = '', ...rest } = Astro.props as Props & Record<string, any>;
 const cls = `ui-input ${extraClass}`.trim();
 ---
 <input class={cls} {...rest} />
-

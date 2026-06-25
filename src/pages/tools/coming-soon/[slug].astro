@@ -6,7 +6,7 @@ import Icon from '../../../components/ui/Icon.astro';
 import Card from '../../../components/ui/Card.astro';
 
 export async function getStaticPaths() {
-  const slugs = SITE.tools.filter((t) => t.status === 'coming_soon').map((t) => t.slug);
+  const slugs = SITE.tools.filter((t) => t.status === 'coming-soon').map((t) => t.slug);
   return slugs.map((slug) => ({ params: { slug } }));
 }
 

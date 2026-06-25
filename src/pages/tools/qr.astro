@@ -1,0 +1,83 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "二维码生成与解码";
+const description = "将文本或链接生成二维码图片，也可上传包含二维码的图片并解析内容。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <h2 class="text-sm font-medium" style="color: var(--text)">生成二维码</h2>
+      <textarea id="text" class="mt-2 min-h-[120px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)">https://blog.0emo.com</textarea>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="grid gap-2 text-sm" style="color: var(--text)">前景色 <input id="dark" type="color" value="#0f172a" class="h-11 w-full rounded-xl border p-1" /></label>
+        <label class="grid gap-2 text-sm" style="color: var(--text)">背景色 <input id="light" type="color" value="#ffffff" class="h-11 w-full rounded-xl border p-1" /></label>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="gen" class="ui-btn ui-btn--primary" type="button">生成</button>
+        <a id="download" class="ui-btn ui-btn--secondary" download="qrcode.png">下载</a>
+      </div>
+      <img id="qrimg" class="mt-4 h-64 w-64 rounded-xl border object-contain p-3" style="background: white; border-color: var(--border)" alt="生成的二维码" />
+    </section>
+
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <h2 class="text-sm font-medium" style="color: var(--text)">解析二维码图片</h2>
+      <input id="file" type="file" accept="image/*" class="mt-3 block w-full text-sm" style="color: var(--text)" />
+      <canvas id="canvas" class="mt-4 hidden"></canvas>
+      <textarea id="decoded" class="mt-4 min-h-[180px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly placeholder="解析结果…"></textarea>
+      <p id="status" class="mt-3 text-sm" style="color: var(--text-muted)"></p>
+    </section>
+  </div>
+
+  <script>
+    // @ts-nocheck
+    let qrCodeLib;
+    let jsQrLib;
+    async function loadQRCode() {
+      if (!qrCodeLib) {
+        const mod = await import("qrcode");
+        qrCodeLib = mod.default || mod;
+      }
+      return qrCodeLib;
+    }
+    async function loadJsQr() {
+      if (!jsQrLib) {
+        const mod = await import("jsqr");
+        jsQrLib = mod.default || mod.jsQR || mod;
+      }
+      return jsQrLib;
+    }
+    async function gen() {
+      const QRCode = await loadQRCode();
+      document.getElementById("qrimg").alt = "二维码生成中";
+      const dataUrl = await QRCode.toDataURL(document.getElementById("text").value || " ", {
+        width: 512,
+        margin: 2,
+        color: { dark: document.getElementById("dark").value, light: document.getElementById("light").value },
+      });
+      document.getElementById("qrimg").src = dataUrl;
+      document.getElementById("download").href = dataUrl;
+    }
+    document.getElementById("gen").addEventListener("click", gen);
+    document.getElementById("file").addEventListener("change", async () => {
+      const file = document.getElementById("file").files?.[0];
+      if (!file) return;
+      const jsQR = await loadJsQr();
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(data.data, data.width, data.height);
+        document.getElementById("decoded").value = code ? code.data : "";
+        document.getElementById("status").textContent = code ? "解析成功。" : "未识别到二维码。";
+      };
+      img.src = URL.createObjectURL(file);
+    });
+    gen();
+  </script>
+</ToolLayout>

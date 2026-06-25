@@ -1,0 +1,18 @@
+{
+  "name": "0emo博客工具箱",
+  "short_name": "0emo工具",
+  "description": "面向开发、站长、文本处理、安全与前端设计的离线友好工具箱。",
+  "start_url": "/tools/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0B1020",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

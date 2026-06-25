@@ -1,0 +1,13 @@
+---
+type Props = {
+  compact?: boolean;
+  children?: unknown;
+};
+
+const { compact = false } = Astro.props as Props;
+---
+
+<div class={`ui-alert text-sm ${compact ? "py-3" : "mb-4"}`}>
+  <strong>隐私提示：</strong>
+  <slot>本工具为纯前端实现，您的数据不会上传到任何服务器。处理 Token、密钥、密码时仍建议仅使用测试或脱敏数据。</slot>
+</div>

@@ -1,0 +1,57 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "HTTP Header 查看器";
+const description = "查看当前浏览器环境信息，或输入 URL 尝试读取目标响应头。受浏览器 CORS 限制，部分站点可能无法读取。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <h2 class="text-sm font-medium" style="color: var(--text)">当前浏览器请求信息</h2>
+      <dl id="client" class="mt-3 grid gap-2 text-sm"></dl>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label for="url" class="text-sm font-medium" style="color: var(--text)">目标 URL 响应头</label>
+      <div class="mt-2 flex flex-col gap-3 sm:flex-row">
+        <input id="url" class="ui-input" placeholder="https://example.com" />
+        <button id="fetch" class="ui-btn ui-btn--primary shrink-0" type="button">获取</button>
+      </div>
+      <p class="mt-2 text-xs" style="color: var(--text-muted)">如果目标站点未开放 CORS，浏览器无法读取响应头。</p>
+      <p id="error" class="mt-3 hidden text-sm" style="color: #ef4444"></p>
+      <pre id="headers" class="mt-4 min-h-[220px] overflow-auto rounded-xl border p-3 text-sm" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"></pre>
+    </section>
+  </div>
+
+  <script is:inline>
+    const client = document.getElementById("client");
+    const row = (k, v) => `<div class="grid gap-1 rounded-xl border px-3 py-2 sm:grid-cols-[140px_1fr]" style="border-color: var(--border); background: var(--bg-elev-2)"><dt style="color: var(--text-muted)">${k}</dt><dd style="color: var(--text); word-break: break-all">${v || "-"}</dd></div>`;
+    client.innerHTML = [
+      ["URL", location.href],
+      ["Origin", location.origin],
+      ["Protocol", location.protocol],
+      ["Language", navigator.language],
+      ["User-Agent", navigator.userAgent],
+      ["Platform", navigator.userAgentData?.platform || "未知"],
+      ["Cookies", navigator.cookieEnabled ? "Enabled" : "Disabled"],
+    ].map(([k, v]) => row(k, v)).join("");
+
+    document.getElementById("fetch").addEventListener("click", async () => {
+      const error = document.getElementById("error");
+      const output = document.getElementById("headers");
+      error.classList.add("hidden");
+      output.textContent = "";
+      try {
+        const input = document.getElementById("url").value.trim();
+        const url = new URL(input.startsWith("http") ? input : `https://${input}`);
+        const res = await fetch(url.toString(), { method: "HEAD", mode: "cors" });
+        const lines = [`Status: ${res.status} ${res.statusText}`];
+        res.headers.forEach((value, key) => lines.push(`${key}: ${value}`));
+        output.textContent = lines.join("\n");
+      } catch (err) {
+        error.textContent = "读取失败：URL 不合法、网络异常，或目标站点未允许 CORS。";
+        error.classList.remove("hidden");
+      }
+    });
+  </script>
+</ToolLayout>

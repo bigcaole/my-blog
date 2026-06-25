@@ -1,0 +1,52 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "大小写批量转换";
+const description = "支持全大写、全小写、Title Case、camelCase、PascalCase、snake_case、kebab-case 一键互转。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="text-sm font-medium" for="input" style="color: var(--text)">输入</label>
+      <textarea id="input" class="mt-2 min-h-[280px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)">hello world example_text</textarea>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button class="ui-btn ui-btn--secondary" data-mode="upper" type="button">UPPER</button>
+        <button class="ui-btn ui-btn--secondary" data-mode="lower" type="button">lower</button>
+        <button class="ui-btn ui-btn--secondary" data-mode="title" type="button">Title</button>
+        <button class="ui-btn ui-btn--primary" data-mode="camel" type="button">camelCase</button>
+        <button class="ui-btn ui-btn--secondary" data-mode="pascal" type="button">PascalCase</button>
+        <button class="ui-btn ui-btn--secondary" data-mode="snake" type="button">snake_case</button>
+        <button class="ui-btn ui-btn--secondary" data-mode="kebab" type="button">kebab-case</button>
+      </div>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="mb-2 flex items-center justify-between">
+        <div class="text-sm font-medium" style="color: var(--text)">结果</div>
+        <button id="copy" class="ui-btn ui-btn--secondary" type="button">复制</button>
+      </div>
+      <textarea id="output" class="min-h-[280px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly></textarea>
+    </section>
+  </div>
+
+  <script is:inline>
+    const input = document.getElementById("input");
+    const output = document.getElementById("output");
+    const words = (s) => s.trim().split(/[^A-Za-z0-9\u4e00-\u9fff]+/).filter(Boolean);
+    const cap = (s) => s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : "";
+    function convert(mode) {
+      const s = input.value || "";
+      const w = words(s);
+      output.value = mode === "upper" ? s.toUpperCase() :
+        mode === "lower" ? s.toLowerCase() :
+        mode === "title" ? w.map(cap).join(" ") :
+        mode === "camel" ? w.map((x, i) => i ? cap(x) : x.toLowerCase()).join("") :
+        mode === "pascal" ? w.map(cap).join("") :
+        mode === "snake" ? w.map((x) => x.toLowerCase()).join("_") :
+        w.map((x) => x.toLowerCase()).join("-");
+    }
+    document.querySelectorAll("[data-mode]").forEach((btn) => btn.addEventListener("click", () => convert(btn.dataset.mode)));
+    document.getElementById("copy").addEventListener("click", () => navigator.clipboard.writeText(output.value || ""));
+    convert("camel");
+  </script>
+</ToolLayout>

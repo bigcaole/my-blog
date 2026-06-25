@@ -91,18 +91,55 @@ import Input from '../../components/ui/Input.astro';
       return v;
     }
 
-    async function query(ip) {
-      const target = ip ? `https://ipwho.is/${encodeURIComponent(ip)}` : 'https://ipwho.is/';
-      const res = await fetch(target, { headers: { Accept: 'application/json' } });
+    async function fetchJson(url) {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!res.ok) throw new Error('请求失败');
-      const data = await res.json();
-      if (data && data.success === false) {
-        throw new Error(data.message || '查询失败');
+      return res.json();
+    }
+
+    function normalizeIpapi(data) {
+      return {
+        ip: data.ip,
+        country: data.country_name,
+        region: data.region,
+        city: data.city,
+        asn: data.asn,
+        isp: data.org,
+      };
+    }
+
+    async function query(ip) {
+      const providers = [
+        {
+          name: 'ipwho.is',
+          url: ip ? `https://ipwho.is/${encodeURIComponent(ip)}` : 'https://ipwho.is/',
+          normalize: (data) => data,
+        },
+        {
+          name: 'ipapi.co',
+          url: ip ? `https://ipapi.co/${encodeURIComponent(ip)}/json/` : 'https://ipapi.co/json/',
+          normalize: normalizeIpapi,
+        },
+      ];
+      let lastError = null;
+      for (const provider of providers) {
+        try {
+          const data = await fetchJson(provider.url);
+          if (data && (data.success === false || data.error)) {
+            throw new Error(data.message || data.reason || '查询失败');
+          }
+          return provider.normalize(data);
+        } catch (error) {
+          lastError = error;
+        }
       }
-      return data;
+      throw lastError || new Error('查询失败');
     }
 
     function render(data) {
+      if (data && data.success === false) {
+        throw new Error(data.message || '查询失败');
+      }
       setText(rIp, data.ip || '');
       const loc = [data.country, data.region, data.city].filter(Boolean).join(' / ');
       setText(rLoc, loc);
@@ -130,7 +167,7 @@ import Input from '../../components/ui/Input.astro';
         render(data);
         showResult(true);
       } catch (err) {
-        showError(err?.message || '查询失败：请稍后重试。');
+        showError(err?.message || '查询失败：已尝试备用服务，请稍后重试。');
       } finally {
         showLoading(false);
       }

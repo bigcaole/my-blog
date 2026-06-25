@@ -9,7 +9,7 @@ export async function getStaticPaths() {
   const posts = await getAllPosts();
   const tags = new Set<string>();
   for (const p of posts) for (const t of p.data.tags ?? []) tags.add(t);
-  return Array.from(tags).map((tag) => ({ params: { tag: encodeURIComponent(tag) } }));
+  return Array.from(tags).map((tag) => ({ params: { tag } }));
 }
 
 const tagParam = Astro.params.tag ?? '';
@@ -34,4 +34,3 @@ const posts = all.filter((p) => (p.data.tags ?? []).includes(decodedTag));
     ))}
   </div>
 </BaseLayout>
-

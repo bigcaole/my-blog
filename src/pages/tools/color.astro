@@ -1,0 +1,70 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "颜色值转换";
+const description = "HEX、RGB、RGBA、HSL 互相转换，并提供可视化拾色器。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-[320px_1fr]">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="grid gap-2 text-sm" style="color: var(--text)">拾色器
+        <input id="picker" type="color" value="#6366f1" class="h-20 w-full rounded-xl border p-1" style="background: var(--bg-elev-2); border-color: var(--border)" />
+      </label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">HEX
+        <input id="hex" class="ui-input font-mono" value="#6366f1" />
+      </label>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div id="swatch" class="h-28 rounded-xl border" style="border-color: var(--border); background: #6366f1"></div>
+      <dl id="out" class="mt-4 grid gap-2 text-sm"></dl>
+    </section>
+  </div>
+
+  <script is:inline>
+    const picker = document.getElementById("picker");
+    const hexInput = document.getElementById("hex");
+    const swatch = document.getElementById("swatch");
+    const out = document.getElementById("out");
+    function parseHex(hex) {
+      let s = hex.trim().replace("#", "");
+      if (s.length === 3) s = s.split("").map((c) => c + c).join("");
+      if (!/^[0-9a-f]{6}$/i.test(s)) return null;
+      return { r: parseInt(s.slice(0, 2), 16), g: parseInt(s.slice(2, 4), 16), b: parseInt(s.slice(4, 6), 16) };
+    }
+    function toHex({ r, g, b }) { return "#" + [r, g, b].map((n) => n.toString(16).padStart(2, "0")).join(""); }
+    function toHsl({ r, g, b }) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > .5 ? d / (2 - max - min) : d / (max + min);
+        h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+        h *= 60;
+      }
+      return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+    function row(k, v) {
+      return `<div class="flex items-center justify-between gap-3 rounded-xl border px-3 py-2" style="border-color: var(--border); background: var(--bg-elev-2)"><dt style="color: var(--text-muted)">${k}</dt><dd class="break-all font-mono" style="color: var(--text)">${v}</dd></div>`;
+    }
+    function render(hex) {
+      const rgb = parseHex(hex);
+      if (!rgb) return;
+      const hsl = toHsl(rgb);
+      const normalized = toHex(rgb);
+      picker.value = normalized;
+      hexInput.value = normalized;
+      swatch.style.background = normalized;
+      out.innerHTML = [
+        ["HEX", normalized],
+        ["RGB", `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`],
+        ["RGBA", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`],
+        ["HSL", `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`],
+      ].map(([k, v]) => row(k, v)).join("");
+    }
+    picker.addEventListener("input", () => render(picker.value));
+    hexInput.addEventListener("input", () => render(hexInput.value));
+    render("#6366f1");
+  </script>
+</ToolLayout>

@@ -68,6 +68,10 @@ const ICONS = {
     body:
       '<path d="M21.8 4.2L3.6 11.5c-1.2.5-1.2 1.2-.2 1.5l4.7 1.5 1.8 5.4c.2.6.4.6.8.2l2.7-2.6 5.6 4.1c1 .6 1.8.3 2-1l3.3-15.4c.3-1.5-.6-2.1-1.5-1z"/><path d="M9.9 14.6l10.8-6.8c.5-.3 1-.1.6.2l-9.2 8.4-.4 4.2c.6 0 .9-.3 1.2-.6l2.8-2.7"/>',
   },
+  mail: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="3" y="5" width="18" height="14" rx="2"/>', '<path d="M3 7l9 6 9-6"/>'].join(""),
+  },
   rss: {
     viewBox: "0 0 24 24",
     body: ['<path d="M4 11a9 9 0 0 1 9 9"/>', '<path d="M4 4a16 16 0 0 1 16 16"/>', '<circle cx="5" cy="19" r="1"/>'].join(""),
@@ -99,6 +103,98 @@ const ICONS = {
     viewBox: "0 0 24 24",
     body:
       '<path d="M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18l3 3 5.3-5.3a5 5 0 0 0 6.4-6.4l-3 3-2.4-2.4 3-3z"/>',
+  },
+  code: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M16 18l6-6-6-6"/>', '<path d="M8 6l-6 6 6 6"/>', '<path d="M14 4l-4 16"/>'].join(""),
+  },
+  braces: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M8 3H7a3 3 0 0 0-3 3v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a3 3 0 0 0 3 3h1"/>', '<path d="M16 3h1a3 3 0 0 1 3 3v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a3 3 0 0 1-3 3h-1"/>'].join(""),
+  },
+  link: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/>', '<path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/>'].join(""),
+  },
+  clock: {
+    viewBox: "0 0 24 24",
+    body: ['<circle cx="12" cy="12" r="9"/>', '<path d="M12 7v5l3 2"/>'].join(""),
+  },
+  regex: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M4 12h16"/>', '<path d="M12 4v16"/>', '<path d="M7.5 7.5l9 9"/>', '<path d="M16.5 7.5l-9 9"/>'].join(""),
+  },
+  key: {
+    viewBox: "0 0 24 24",
+    body: ['<circle cx="7.5" cy="14.5" r="4.5"/>', '<path d="M11 11l9-9"/>', '<path d="M16 6l2 2"/>', '<path d="M14 8l2 2"/>'].join(""),
+  },
+  calendar: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="3" y="4" width="18" height="18" rx="2"/>', '<path d="M16 2v4"/>', '<path d="M8 2v4"/>', '<path d="M3 10h18"/>'].join(""),
+  },
+  network: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="9" y="2" width="6" height="6" rx="1"/>', '<rect x="3" y="16" width="6" height="6" rx="1"/>', '<rect x="15" y="16" width="6" height="6" rx="1"/>', '<path d="M12 8v4"/>', '<path d="M6 16v-2h12v2"/>'].join(""),
+  },
+  headers: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M4 7h16"/>', '<path d="M4 12h10"/>', '<path d="M4 17h16"/>', '<path d="M17 10l3 2-3 2"/>'].join(""),
+  },
+  globe: {
+    viewBox: "0 0 24 24",
+    body: ['<circle cx="12" cy="12" r="9"/>', '<path d="M3 12h18"/>', '<path d="M12 3a14 14 0 0 1 0 18"/>', '<path d="M12 3a14 14 0 0 0 0 18"/>'].join(""),
+  },
+  monitor: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="3" y="4" width="18" height="13" rx="2"/>', '<path d="M8 21h8"/>', '<path d="M12 17v4"/>'].join(""),
+  },
+  server: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="3" y="4" width="18" height="6" rx="2"/>', '<rect x="3" y="14" width="18" height="6" rx="2"/>', '<path d="M7 7h.01"/>', '<path d="M7 17h.01"/>'].join(""),
+  },
+  diff: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M6 8h8"/>', '<path d="M6 16h12"/>', '<path d="M18 5v6"/>', '<path d="M15 8h6"/>', '<path d="M15 19h6"/>'].join(""),
+  },
+  case: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M4 17L9 5l5 12"/>', '<path d="M6 13h6"/>', '<path d="M16 17V9h4"/>', '<path d="M16 13h3"/>'].join(""),
+  },
+  paragraph: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M13 4v16"/>', '<path d="M17 4v16"/>', '<path d="M19 4H9a5 5 0 0 0 0 10h4"/>'].join(""),
+  },
+  hash: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M4 9h16"/>', '<path d="M4 15h16"/>', '<path d="M10 3L8 21"/>', '<path d="M16 3l-2 18"/>'].join(""),
+  },
+  lock: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="4" y="11" width="16" height="10" rx="2"/>', '<path d="M8 11V8a4 4 0 0 1 8 0v3"/>'].join(""),
+  },
+  shield: {
+    viewBox: "0 0 24 24",
+    body: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  },
+  star: {
+    viewBox: "0 0 24 24",
+    body: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3z"/>',
+  },
+  palette: {
+    viewBox: "0 0 24 24",
+    body: ['<path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.5-3.3 1.5 1.5 0 0 1 1.1-2.7H18a6 6 0 0 0 0-12h-6z"/>', '<circle cx="7.5" cy="10" r=".5"/>', '<circle cx="10" cy="7.5" r=".5"/>', '<circle cx="14" cy="7.5" r=".5"/>'].join(""),
+  },
+  gradient: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="3" y="5" width="18" height="14" rx="2"/>', '<path d="M7 5v14"/>', '<path d="M12 5v14"/>', '<path d="M17 5v14"/>'].join(""),
+  },
+  qr: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="3" y="3" width="7" height="7" rx="1"/>', '<rect x="14" y="3" width="7" height="7" rx="1"/>', '<rect x="3" y="14" width="7" height="7" rx="1"/>', '<path d="M14 14h2v2h-2z"/>', '<path d="M19 14h2v7h-7v-2h5z"/>', '<path d="M14 19h2v2h-2z"/>'].join(""),
+  },
+  image: {
+    viewBox: "0 0 24 24",
+    body: ['<rect x="3" y="5" width="18" height="14" rx="2"/>', '<circle cx="8" cy="10" r="1.5"/>', '<path d="M21 16l-5-5L5 19"/>'].join(""),
   },
   "arrow-right": {
     viewBox: "0 0 24 24",
@@ -134,8 +230,7 @@ const ICONS = {
   },
 };
 
-const icon = ICONS[name] || ICONS.sparkles;
-const ariaAttrs = label ? { role: "img", "aria-label": label } : { "aria-hidden": "true" };
+const icon = ICONS[name as keyof typeof ICONS] || ICONS.sparkles;
 ---
 
 <svg
@@ -145,11 +240,12 @@ const ariaAttrs = label ? { role: "img", "aria-label": label } : { "aria-hidden"
   viewBox={icon.viewBox}
   fill="none"
   stroke="currentColor"
-  strokeWidth={strokeWidth}
-  strokeLinecap="round"
-  strokeLinejoin="round"
+  stroke-width={strokeWidth}
+  stroke-linecap="round"
+  stroke-linejoin="round"
   class={className}
-  {...ariaAttrs}
+  role={label ? "img" : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : "true"}
   set:html={icon.body}
 ></svg>
-

@@ -11,10 +11,10 @@
     { "label": "关于", "href": "/about" }
   ],
   "social": {
-    "github": "https://github.com/bigcaole/my-blog",
-    "telegram": "",
+    "github": "",
+    "telegram": "https://t.me/miss_lin_bot",
     "twitter": "",
-    "email": ""
+    "email": "xiainiya@gmail.com"
   },
   "tools": [
     {
@@ -22,35 +22,252 @@
       "slug": "ip",
       "description": "查询公网 IP、国家/城市/ASN/ISP。",
       "status": "live",
-      "iconKey": "search"
+      "iconKey": "search",
+      "category": "network",
+      "keywords": ["ip", "lookup", "地址", "归属地", "isp"]
     },
     {
       "title": "Base64 编码/解码",
       "slug": "base64",
       "description": "文本 ↔ Base64（UTF-8），支持复制与错误提示。",
       "status": "live",
-      "iconKey": "file-text"
+      "iconKey": "file-text",
+      "category": "developer",
+      "keywords": ["base64", "编码", "解码"]
+    },
+    {
+      "title": "JSON 格式化与校验",
+      "slug": "json",
+      "description": "JSON 美化、压缩、校验与语法错误定位。",
+      "status": "live",
+      "iconKey": "braces",
+      "category": "developer",
+      "keywords": ["json", "formatter", "validator", "格式化", "校验"]
+    },
+    {
+      "title": "URL 编码/解码",
+      "slug": "url-codec",
+      "description": "处理 URL、查询参数与特殊字符的编码解码。",
+      "status": "live",
+      "iconKey": "link",
+      "category": "developer",
+      "keywords": ["url", "encode", "decode", "编码", "解码"]
+    },
+    {
+      "title": "时间戳转换器",
+      "slug": "timestamp",
+      "description": "Unix 秒/毫秒时间戳与北京时间/本地时间互转。",
+      "status": "live",
+      "iconKey": "clock",
+      "category": "developer",
+      "keywords": ["timestamp", "unix", "时间戳", "北京时间"]
+    },
+    {
+      "title": "正则表达式测试",
+      "slug": "regex",
+      "description": "实时匹配、高亮结果，并内置常用正则模板。",
+      "status": "live",
+      "iconKey": "regex",
+      "category": "developer",
+      "keywords": ["regex", "regexp", "正则", "邮箱", "手机号"]
+    },
+    {
+      "title": "JWT 解析器",
+      "slug": "jwt",
+      "description": "解析 JWT Header 与 Payload，并提示避免输入敏感 Token。",
+      "status": "live",
+      "iconKey": "key",
+      "category": "developer",
+      "keywords": ["jwt", "token", "header", "payload"]
     },
     {
       "title": "Cron 下一次执行",
       "slug": "cron",
       "description": "输入 5 段 Cron，展示未来 5 次执行时间（本地时区）。",
       "status": "live",
-      "iconKey": "chevron-down"
+      "iconKey": "clock",
+      "category": "developer",
+      "keywords": ["cron", "crontab", "定时任务"]
+    },
+    {
+      "title": "Crontab 生成器",
+      "slug": "crontab",
+      "description": "通过 UI 选择分钟、小时、日期，生成表达式并预告执行时间。",
+      "status": "live",
+      "iconKey": "calendar",
+      "category": "developer",
+      "keywords": ["cron", "crontab", "generator", "生成器"]
+    },
+    {
+      "title": "代码压缩/美化",
+      "slug": "code-format",
+      "description": "支持 HTML、CSS、JavaScript 的压缩与美化。",
+      "status": "live",
+      "iconKey": "code",
+      "category": "developer",
+      "keywords": ["html", "css", "javascript", "minify", "beautify"]
     },
     {
       "title": "UUID 生成器",
       "slug": "uuid",
       "description": "一键生成 UUID v4，支持批量生成与复制。",
       "status": "live",
-      "iconKey": "sparkles"
+      "iconKey": "sparkles",
+      "category": "developer",
+      "keywords": ["uuid", "随机", "id"]
     },
     {
       "title": "子网掩码 / CIDR",
       "slug": "subnet",
       "description": "IPv4 & IPv6 子网掩码、网络地址等计算。",
       "status": "live",
-      "iconKey": "wrench"
+      "iconKey": "network",
+      "category": "network",
+      "keywords": ["cidr", "subnet", "ipv4", "ipv6", "子网"]
+    },
+    {
+      "title": "HTTP Header 查看器",
+      "slug": "http-headers",
+      "description": "查看浏览器请求信息，或尝试读取目标 URL 响应头。",
+      "status": "live",
+      "iconKey": "headers",
+      "category": "network",
+      "keywords": ["http", "header", "headers", "响应头", "请求头"]
+    },
+    {
+      "title": "DNS 记录查询",
+      "slug": "dns",
+      "description": "通过 DNS over HTTPS 查询 A、AAAA、CNAME、MX、TXT 等记录。",
+      "status": "live",
+      "iconKey": "globe",
+      "category": "network",
+      "keywords": ["dns", "a", "aaaa", "cname", "mx", "txt"]
+    },
+    {
+      "title": "User-Agent 解析",
+      "slug": "user-agent",
+      "description": "解析浏览器、系统、设备类型，并可分析自定义 UA。",
+      "status": "live",
+      "iconKey": "monitor",
+      "category": "network",
+      "keywords": ["user-agent", "ua", "browser", "设备"]
+    },
+    {
+      "title": "服务器配置生成器",
+      "slug": "server-config",
+      "description": "勾选 301、HTTPS、防盗链等需求生成 Nginx 或 .htaccess 配置。",
+      "status": "live",
+      "iconKey": "server",
+      "category": "network",
+      "keywords": ["nginx", "htaccess", "301", "https", "防盗链"]
+    },
+    {
+      "title": "文本差异对比",
+      "slug": "text-diff",
+      "description": "左右分栏对比两段文本，标出新增、删除和修改。",
+      "status": "live",
+      "iconKey": "diff",
+      "category": "text",
+      "keywords": ["diff", "compare", "差异", "对比"]
+    },
+    {
+      "title": "字数统计",
+      "slug": "word-counter",
+      "description": "统计中文字数、英文词数、标点、空格、段落与阅读时长。",
+      "status": "live",
+      "iconKey": "file-text",
+      "category": "text",
+      "keywords": ["word", "counter", "字数", "统计"]
+    },
+    {
+      "title": "大小写批量转换",
+      "slug": "case-converter",
+      "description": "全大写、全小写、camelCase、PascalCase、snake_case 等互转。",
+      "status": "live",
+      "iconKey": "case",
+      "category": "text",
+      "keywords": ["case", "camel", "snake", "kebab", "大小写"]
+    },
+    {
+      "title": "假文生成器",
+      "slug": "lorem",
+      "description": "生成指定段落、句子或字数的中英文排版占位文本。",
+      "status": "live",
+      "iconKey": "paragraph",
+      "category": "text",
+      "keywords": ["lorem", "ipsum", "假文", "占位"]
+    },
+    {
+      "title": "哈希计算器",
+      "slug": "hash",
+      "description": "纯前端实时计算 MD5、SHA-1、SHA-256、SHA-512。",
+      "status": "live",
+      "iconKey": "hash",
+      "category": "security",
+      "keywords": ["md5", "sha1", "sha256", "sha512", "hash"]
+    },
+    {
+      "title": "随机密码生成器",
+      "slug": "password",
+      "description": "自定义长度与字符集，生成高强度随机密码。",
+      "status": "live",
+      "iconKey": "lock",
+      "category": "security",
+      "keywords": ["password", "密码", "随机", "强密码"]
+    },
+    {
+      "title": "Bcrypt 加密/比对",
+      "slug": "bcrypt",
+      "description": "生成 Bcrypt 哈希并验证明文密码是否匹配。",
+      "status": "live",
+      "iconKey": "shield",
+      "category": "security",
+      "keywords": ["bcrypt", "hash", "verify", "密码"]
+    },
+    {
+      "title": "RSA 密钥对生成器",
+      "slug": "rsa",
+      "description": "在浏览器中生成 1024/2048/4096 位 RSA 公钥和私钥。",
+      "status": "live",
+      "iconKey": "key",
+      "category": "security",
+      "keywords": ["rsa", "public key", "private key", "密钥"]
+    },
+    {
+      "title": "颜色值转换",
+      "slug": "color",
+      "description": "HEX、RGB、RGBA、HSL 互转，并提供可视化拾色器。",
+      "status": "live",
+      "iconKey": "palette",
+      "category": "design",
+      "keywords": ["color", "hex", "rgb", "hsl", "颜色"]
+    },
+    {
+      "title": "CSS 渐变生成器",
+      "slug": "gradient",
+      "description": "拖拽颜色与角度，生成 linear-gradient CSS 代码。",
+      "status": "live",
+      "iconKey": "gradient",
+      "category": "design",
+      "keywords": ["gradient", "css", "linear-gradient", "渐变"]
+    },
+    {
+      "title": "二维码生成与解码",
+      "slug": "qr",
+      "description": "文本/链接生成二维码，支持上传图片解析二维码内容。",
+      "status": "live",
+      "iconKey": "qr",
+      "category": "design",
+      "keywords": ["qr", "qrcode", "二维码", "decode"]
+    },
+    {
+      "title": "图片转 Base64",
+      "slug": "image-base64",
+      "description": "上传小图片并生成可嵌入 HTML/CSS 的 Base64 Data URL。",
+      "status": "live",
+      "iconKey": "image",
+      "category": "design",
+      "keywords": ["image", "base64", "data url", "图片"]
     }
   ],
   "seo": {

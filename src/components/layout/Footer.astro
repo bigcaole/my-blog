@@ -48,17 +48,17 @@ const year = new Date().getFullYear();
     <div>
       <div class="text-sm font-semibold">社交</div>
       <ul class="mt-3 space-y-2 text-sm" style="color: var(--text-muted)">
-        {SITE.social.github ? (
+        {SITE.social.email ? (
           <li>
-            <a class="inline-flex items-center gap-2 hover:underline" href={SITE.social.github} target="_blank" rel="noreferrer">
-              <Icon name="github" size={16} /> GitHub
+            <a class="inline-flex items-center gap-2 hover:underline" href={`mailto:${SITE.social.email}`}>
+              <Icon name="mail" size={16} /> Gmail
             </a>
           </li>
         ) : null}
         {SITE.social.telegram ? (
           <li>
             <a class="inline-flex items-center gap-2 hover:underline" href={SITE.social.telegram} target="_blank" rel="noreferrer">
-              <Icon name="telegram" size={16} /> Telegram
+              <Icon name="telegram" size={16} /> @miss_lin_bot
             </a>
           </li>
         ) : null}
@@ -66,13 +66,6 @@ const year = new Date().getFullYear();
           <li>
             <a class="inline-flex items-center gap-2 hover:underline" href={SITE.social.x} target="_blank" rel="noreferrer">
               <Icon name="x" size={16} /> X
-            </a>
-          </li>
-        ) : null}
-        {SITE.social.email ? (
-          <li>
-            <a class="inline-flex items-center gap-2 hover:underline" href={`mailto:${SITE.social.email}`}>
-              <Icon name="mail" size={16} /> Email
             </a>
           </li>
         ) : null}

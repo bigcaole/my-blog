@@ -1,0 +1,80 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "时间戳转换器";
+const description = "Unix 时间戳（秒/毫秒）与本地时间、北京时间双向转换。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <h2 class="text-sm font-medium" style="color: var(--text)">时间戳 → 时间</h2>
+      <div class="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <input id="tsInput" class="ui-input" placeholder="例如 1767225600 或 1767225600000" />
+        <button id="nowTs" class="ui-btn ui-btn--secondary" type="button">当前时间戳</button>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="parseTs" class="ui-btn ui-btn--primary" type="button">转换</button>
+        <button id="copyTs" class="ui-btn ui-btn--secondary" type="button">复制结果</button>
+      </div>
+      <dl id="tsOut" class="mt-4 grid gap-2 text-sm"></dl>
+    </section>
+
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <h2 class="text-sm font-medium" style="color: var(--text)">时间 → 时间戳</h2>
+      <input id="dateInput" type="datetime-local" class="ui-input mt-3" />
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="parseDate" class="ui-btn ui-btn--primary" type="button">生成时间戳</button>
+        <button id="fillNow" class="ui-btn ui-btn--secondary" type="button">填入当前</button>
+      </div>
+      <dl id="dateOut" class="mt-4 grid gap-2 text-sm"></dl>
+    </section>
+  </div>
+
+  <script is:inline>
+    const fmtLocal = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "medium" });
+    const fmtBJ = new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", dateStyle: "full", timeStyle: "medium" });
+    function row(k, v) {
+      return `<div class="grid gap-1 rounded-xl border px-3 py-2 sm:grid-cols-[120px_1fr]" style="border-color: var(--border); background: var(--bg-elev-2)"><dt style="color: var(--text-muted)">${k}</dt><dd style="color: var(--text); word-break: break-all">${v}</dd></div>`;
+    }
+    function render(el, rows) {
+      el.innerHTML = rows.map(([k, v]) => row(k, v)).join("");
+    }
+    function toLocalInput(date) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+    function parseTimestampValue(value) {
+      const n = Number(String(value).trim());
+      if (!Number.isFinite(n)) throw new Error("请输入数字时间戳。");
+      return new Date(String(Math.trunc(Math.abs(n))).length <= 10 ? n * 1000 : n);
+    }
+    function renderDate(date, el) {
+      render(el, [
+        ["Unix 秒", Math.floor(date.getTime() / 1000)],
+        ["Unix 毫秒", date.getTime()],
+        ["本地时间", fmtLocal.format(date)],
+        ["北京时间", fmtBJ.format(date)],
+        ["ISO", date.toISOString()],
+      ]);
+    }
+    document.getElementById("nowTs").addEventListener("click", () => {
+      document.getElementById("tsInput").value = String(Date.now());
+      renderDate(new Date(), document.getElementById("tsOut"));
+    });
+    document.getElementById("parseTs").addEventListener("click", () => {
+      try { renderDate(parseTimestampValue(document.getElementById("tsInput").value), document.getElementById("tsOut")); } catch (e) { render(document.getElementById("tsOut"), [["错误", e.message]]); }
+    });
+    document.getElementById("copyTs").addEventListener("click", () => navigator.clipboard.writeText(document.getElementById("tsOut").innerText || ""));
+    document.getElementById("fillNow").addEventListener("click", () => {
+      document.getElementById("dateInput").value = toLocalInput(new Date());
+    });
+    document.getElementById("parseDate").addEventListener("click", () => {
+      const value = document.getElementById("dateInput").value;
+      const date = value ? new Date(value) : new Date();
+      renderDate(date, document.getElementById("dateOut"));
+    });
+    document.getElementById("fillNow").click();
+    document.getElementById("nowTs").click();
+  </script>
+</ToolLayout>

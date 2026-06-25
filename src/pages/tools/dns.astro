@@ -1,0 +1,76 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "DNS 记录查询";
+const description = "通过 DNS over HTTPS 查询域名的 A、AAAA、CNAME、MX、TXT、NS 等记录，支持备用 Provider 降级。";
+---
+
+<ToolLayout title={title} description={description}>
+  <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+    <div class="grid gap-3 lg:grid-cols-[1fr_160px_auto] lg:items-end">
+      <label class="grid gap-2 text-sm" style="color: var(--text)">域名
+        <input id="domain" class="ui-input" placeholder="example.com" value="example.com" />
+      </label>
+      <label class="grid gap-2 text-sm" style="color: var(--text)">记录类型
+        <select id="type" class="ui-input">
+          <option>A</option>
+          <option>AAAA</option>
+          <option>CNAME</option>
+          <option>MX</option>
+          <option>TXT</option>
+          <option>NS</option>
+        </select>
+      </label>
+      <button id="query" class="ui-btn ui-btn--primary" type="button">查询</button>
+    </div>
+    <p id="error" class="mt-3 hidden text-sm" style="color: #ef4444"></p>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[640px] text-left text-sm">
+        <thead style="color: var(--text-muted)"><tr><th class="p-2">Name</th><th class="p-2">Type</th><th class="p-2">TTL</th><th class="p-2">Data</th></tr></thead>
+        <tbody id="rows" style="color: var(--text)"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script is:inline>
+    const typeNames = { 1: "A", 2: "NS", 5: "CNAME", 15: "MX", 16: "TXT", 28: "AAAA" };
+    const providers = [
+      (domain, type) => `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`,
+      (domain, type) => `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`,
+    ];
+    async function queryDns(domain, type) {
+      let lastError = null;
+      for (const makeUrl of providers) {
+        try {
+          const res = await fetch(makeUrl(domain, type), { headers: { Accept: "application/dns-json" } });
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return await res.json();
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("DNS 查询失败");
+    }
+    async function run() {
+      const domain = document.getElementById("domain").value.trim();
+      const type = document.getElementById("type").value;
+      const rows = document.getElementById("rows");
+      const error = document.getElementById("error");
+      error.classList.add("hidden");
+      rows.innerHTML = "";
+      try {
+        const data = await queryDns(domain, type);
+        const answers = data.Answer || [];
+        if (!answers.length) rows.innerHTML = '<tr><td class="p-2" colspan="4" style="color: var(--text-muted)">没有查询到记录。</td></tr>';
+        for (const item of answers) {
+          rows.insertAdjacentHTML("beforeend", `<tr class="border-t" style="border-color: var(--border)"><td class="p-2">${item.name}</td><td class="p-2">${typeNames[item.type] || item.type}</td><td class="p-2">${item.TTL}</td><td class="p-2 break-all">${item.data}</td></tr>`);
+        }
+      } catch (err) {
+        error.textContent = "查询失败，请检查域名或稍后重试。";
+        error.classList.remove("hidden");
+      }
+    }
+    document.getElementById("query").addEventListener("click", run);
+    run();
+  </script>
+</ToolLayout>

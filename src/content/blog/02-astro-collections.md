@@ -19,5 +19,4 @@ Astro 的 content collections 适合“少依赖、强约束”的个人博客�
 
 ## 目录（TOC）
 
-文章页可从 `post.render()` 拿到 `headings`，直接渲染目录。
-
+文章页可通过 `render(post)` 拿到 `headings`，直接渲染目录。

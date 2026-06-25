@@ -1,0 +1,117 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "Crontab 生成器";
+const description = "通过 UI 选择分钟、小时、日期等字段，生成 Linux Cron 表达式并预告接下来 5 次执行时间。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-[360px_1fr]">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="grid gap-2 text-sm" style="color: var(--text)">分钟 <input id="min" class="ui-input font-mono" value="*/5" /></label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">小时 <input id="hour" class="ui-input font-mono" value="*" /></label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">日期 <input id="dom" class="ui-input font-mono" value="*" /></label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">月份 <input id="mon" class="ui-input font-mono" value="*" /></label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">星期 <input id="dow" class="ui-input font-mono" value="*" /></label>
+      <div class="mt-4 grid gap-2">
+        <button class="ui-btn ui-btn--secondary" type="button" data-preset="hourly">每小时</button>
+        <button class="ui-btn ui-btn--secondary" type="button" data-preset="daily">每天 02:30</button>
+        <button class="ui-btn ui-btn--secondary" type="button" data-preset="weekly">每周一 09:00</button>
+      </div>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="text-sm font-medium" style="color: var(--text)">表达式</div>
+      <div class="mt-2 flex flex-col gap-3 sm:flex-row">
+        <input id="expr" class="ui-input font-mono" readonly />
+        <button id="copy" class="ui-btn ui-btn--primary shrink-0" type="button">复制</button>
+      </div>
+      <p class="mt-3 text-sm" style="color: var(--text-muted)">支持数字、*、逗号、范围和步进。接下来 5 次按本地时区预估。</p>
+      <ol id="next" class="mt-4 grid gap-2 text-sm"></ol>
+      <p id="error" class="mt-3 hidden text-sm" style="color: #ef4444"></p>
+    </section>
+  </div>
+
+  <script is:inline>
+    const ids = ["min", "hour", "dom", "mon", "dow"];
+    const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+    const expr = document.getElementById("expr");
+    const next = document.getElementById("next");
+    const error = document.getElementById("error");
+    function parseField(src, min, max, map7to0 = false) {
+      const values = new Set();
+      const s = (src || "").trim();
+      if (!s) return null;
+      if (s === "*") {
+        for (let i = min; i <= max; i++) values.add(i);
+        return { any: true, values };
+      }
+      for (const part of s.split(",")) {
+        let [base, stepText] = part.split("/");
+        const step = stepText ? Number(stepText) : 1;
+        if (!Number.isInteger(step) || step < 1) return null;
+        if (base === "*" || base === "") {
+          for (let v = min; v <= max; v += step) values.add(v);
+        } else if (base.includes("-")) {
+          const [a, b] = base.split("-").map(Number);
+          if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+          for (let v = Math.min(a, b); v <= Math.max(a, b); v += step) values.add(map7to0 && v === 7 ? 0 : v);
+        } else {
+          const n = Number(base);
+          if (!Number.isInteger(n)) return null;
+          values.add(map7to0 && n === 7 ? 0 : n);
+        }
+      }
+      if ([...values].some((v) => v < min || v > max)) return null;
+      return { any: false, values };
+    }
+    function match(date, cron) {
+      if (!cron.min.values.has(date.getMinutes())) return false;
+      if (!cron.hour.values.has(date.getHours())) return false;
+      if (!cron.mon.values.has(date.getMonth() + 1)) return false;
+      const dom = cron.dom.values.has(date.getDate());
+      const dow = cron.dow.values.has(date.getDay());
+      return cron.dom.any && cron.dow.any ? true : cron.dom.any ? dow : cron.dow.any ? dom : dom || dow;
+    }
+    function compute(e) {
+      const parts = e.split(/\s+/);
+      const cron = { min: parseField(parts[0], 0, 59), hour: parseField(parts[1], 0, 23), dom: parseField(parts[2], 1, 31), mon: parseField(parts[3], 1, 12), dow: parseField(parts[4], 0, 6, true) };
+      if (Object.values(cron).some((x) => !x)) throw new Error("表达式格式不合法。");
+      const out = [];
+      const t = new Date();
+      t.setSeconds(0, 0);
+      t.setMinutes(t.getMinutes() + 1);
+      for (let i = 0; i < 60 * 24 * 370 && out.length < 5; i++, t.setMinutes(t.getMinutes() + 1)) {
+        if (match(t, cron)) out.push(new Date(t));
+      }
+      return out;
+    }
+    function render() {
+      expr.value = ids.map((id) => el[id].value.trim() || "*").join(" ");
+      error.classList.add("hidden");
+      next.innerHTML = "";
+      try {
+        for (const date of compute(expr.value)) {
+          const li = document.createElement("li");
+          li.className = "rounded-xl border px-3 py-2";
+          li.style.borderColor = "var(--border)";
+          li.style.background = "var(--bg-elev-2)";
+          li.style.color = "var(--text)";
+          li.textContent = date.toLocaleString();
+          next.appendChild(li);
+        }
+      } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove("hidden");
+      }
+    }
+    for (const id of ids) el[id].addEventListener("input", render);
+    document.querySelectorAll("[data-preset]").forEach((button) => button.addEventListener("click", () => {
+      const p = button.dataset.preset;
+      const map = { hourly: ["0", "*", "*", "*", "*"], daily: ["30", "2", "*", "*", "*"], weekly: ["0", "9", "*", "*", "1"] }[p];
+      ids.forEach((id, i) => (el[id].value = map[i]));
+      render();
+    }));
+    document.getElementById("copy").addEventListener("click", () => navigator.clipboard.writeText(expr.value));
+    render();
+  </script>
+</ToolLayout>

@@ -1,0 +1,103 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "正则表达式测试";
+const description = "实时测试正则匹配结果，并提供邮箱、手机号、身份证号等常用模板。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-[360px_1fr]">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="text-sm font-medium" for="pattern" style="color: var(--text)">表达式</label>
+      <input id="pattern" class="ui-input mt-2 font-mono" value="\\b\\w+@\\w+\\.\\w+\\b" />
+      <label class="mt-3 block text-sm font-medium" for="flags" style="color: var(--text)">Flags</label>
+      <input id="flags" class="ui-input mt-2 font-mono" value="gi" />
+      <label class="mt-3 block text-sm font-medium" for="template" style="color: var(--text)">常用模板</label>
+      <select id="template" class="ui-input mt-2">
+        <option value="">选择模板…</option>
+        <option value="email">邮箱</option>
+        <option value="phone-cn">中国手机号</option>
+        <option value="id-cn">中国身份证号</option>
+        <option value="url">URL</option>
+        <option value="ipv4">IPv4</option>
+      </select>
+      <p id="error" class="mt-3 hidden text-sm" style="color: #ef4444"></p>
+    </section>
+
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="text-sm font-medium" for="text" style="color: var(--text)">测试文本</label>
+      <textarea id="text" class="mt-2 min-h-[180px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" spellcheck="false">联系 test@example.com 或 admin@0emo.com，电话 13800138000。</textarea>
+      <div class="mt-4 grid gap-3 lg:grid-cols-2">
+        <div>
+          <div class="mb-2 text-sm font-medium" style="color: var(--text)">高亮预览</div>
+          <div id="highlight" class="min-h-[120px] whitespace-pre-wrap rounded-xl border p-3 text-sm" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)"></div>
+        </div>
+        <div>
+          <div class="mb-2 text-sm font-medium" style="color: var(--text)">匹配列表</div>
+          <ol id="matches" class="grid gap-2 text-sm"></ol>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script is:inline>
+    const templates = {
+      email: ["\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b", "gi"],
+      "phone-cn": ["(?<!\\d)1[3-9]\\d{9}(?!\\d)", "g"],
+      "id-cn": ["\\b\\d{17}[0-9Xx]\\b", "g"],
+      url: ["https?:\\/\\/[^\\s]+", "gi"],
+      ipv4: ["\\b(?:(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\.){3}(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\b", "g"],
+    };
+    const pattern = document.getElementById("pattern");
+    const flags = document.getElementById("flags");
+    const text = document.getElementById("text");
+    const highlight = document.getElementById("highlight");
+    const matches = document.getElementById("matches");
+    const error = document.getElementById("error");
+    const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+    function run() {
+      error.classList.add("hidden");
+      matches.innerHTML = "";
+      const src = text.value || "";
+      try {
+        const f = flags.value.includes("g") ? flags.value : flags.value + "g";
+        const re = new RegExp(pattern.value, f);
+        let html = "";
+        let last = 0;
+        let count = 0;
+        for (const match of src.matchAll(re)) {
+          const value = match[0];
+          if (!value && match.index === last) break;
+          html += esc(src.slice(last, match.index));
+          html += `<mark style="background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--text); border-radius: .35rem; padding: 0 .15rem">${esc(value)}</mark>`;
+          last = match.index + value.length;
+          const li = document.createElement("li");
+          li.className = "rounded-xl border px-3 py-2";
+          li.style.borderColor = "var(--border)";
+          li.style.background = "var(--bg-elev-2)";
+          li.style.color = "var(--text)";
+          li.textContent = `#${++count} [${match.index}] ${value}`;
+          matches.appendChild(li);
+        }
+        highlight.innerHTML = html + esc(src.slice(last));
+        if (!count) matches.innerHTML = '<li style="color: var(--text-muted)">暂无匹配。</li>';
+      } catch (err) {
+        error.textContent = err.message || "正则表达式不合法。";
+        error.classList.remove("hidden");
+        highlight.textContent = src;
+      }
+    }
+    document.getElementById("template").addEventListener("change", (e) => {
+      const tpl = templates[e.target.value];
+      if (tpl) {
+        pattern.value = tpl[0];
+        flags.value = tpl[1];
+        run();
+      }
+    });
+    pattern.addEventListener("input", run);
+    flags.addEventListener("input", run);
+    text.addEventListener("input", run);
+    run();
+  </script>
+</ToolLayout>

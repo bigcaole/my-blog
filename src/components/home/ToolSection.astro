@@ -14,7 +14,7 @@ type Props = {
 const { tools, limit = 6 } = Astro.props as Props;
 const items = tools.slice(0, limit).map((t) => ({
   ...t,
-  href: t.status === 'active' ? `/tools/${t.slug}/` : `/tools/coming-soon/${t.slug}/`,
+  href: t.status === 'live' ? `/tools/${t.slug}/` : `/tools/coming-soon/${t.slug}/`,
 }));
 ---
 

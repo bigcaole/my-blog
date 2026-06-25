@@ -1,0 +1,53 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "假文生成器";
+const description = "生成指定段落和句子数量的中英文排版占位文本。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-[320px_1fr]">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label class="grid gap-2 text-sm" style="color: var(--text)">语言
+        <select id="lang" class="ui-input"><option value="cn">中文</option><option value="en">English</option></select>
+      </label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">段落数
+        <input id="paragraphs" class="ui-input" type="number" min="1" max="20" value="3" />
+      </label>
+      <label class="mt-3 grid gap-2 text-sm" style="color: var(--text)">每段句子数
+        <input id="sentences" class="ui-input" type="number" min="1" max="12" value="4" />
+      </label>
+      <button id="gen" class="ui-btn ui-btn--primary mt-4 w-full" type="button">生成</button>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <div class="mb-2 flex items-center justify-between">
+        <div class="text-sm font-medium" style="color: var(--text)">结果</div>
+        <button id="copy" class="ui-btn ui-btn--secondary" type="button">复制</button>
+      </div>
+      <textarea id="out" class="min-h-[420px] w-full resize-y rounded-xl border p-3 text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)" readonly></textarea>
+    </section>
+  </div>
+
+  <script is:inline>
+    const cn = ["这是用于界面排版测试的占位文字", "内容会保持自然的阅读节奏", "你可以快速生成多段文本", "适合验证卡片列表与正文版式", "它不会表达真实业务含义"];
+    const en = ["Lorem ipsum dolor sit amet", "consectetur adipiscing elit", "sed do eiusmod tempor incididunt", "ut labore et dolore magna aliqua", "praesent commodo cursus magna"];
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function gen() {
+      const lang = document.getElementById("lang").value;
+      const p = Math.min(20, Math.max(1, Number(document.getElementById("paragraphs").value) || 1));
+      const s = Math.min(12, Math.max(1, Number(document.getElementById("sentences").value) || 1));
+      const pool = lang === "cn" ? cn : en;
+      const end = lang === "cn" ? "。" : ".";
+      const out = [];
+      for (let i = 0; i < p; i++) {
+        const lines = [];
+        for (let j = 0; j < s; j++) lines.push(pick(pool) + end);
+        out.push(lang === "cn" ? lines.join("") : lines.join(" "));
+      }
+      document.getElementById("out").value = out.join("\n\n");
+    }
+    document.getElementById("gen").addEventListener("click", gen);
+    document.getElementById("copy").addEventListener("click", () => navigator.clipboard.writeText(document.getElementById("out").value || ""));
+    gen();
+  </script>
+</ToolLayout>

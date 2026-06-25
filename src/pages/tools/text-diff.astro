@@ -1,0 +1,62 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const title = "文本差异对比";
+const description = "左右分栏对比两段文本，按行标出新增、删除和未变化内容。";
+---
+
+<ToolLayout title={title} description={description}>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label for="left" class="text-sm font-medium" style="color: var(--text)">原文本</label>
+      <textarea id="left" class="mt-2 min-h-[260px] w-full resize-y rounded-xl border p-3 font-mono text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)">hello
+old line
+same</textarea>
+    </section>
+    <section class="rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+      <label for="right" class="text-sm font-medium" style="color: var(--text)">新文本</label>
+      <textarea id="right" class="mt-2 min-h-[260px] w-full resize-y rounded-xl border p-3 font-mono text-sm outline-none" style="background: var(--bg-elev-2); border-color: var(--border); color: var(--text)">hello
+new line
+same</textarea>
+    </section>
+  </div>
+  <section class="mt-4 rounded-2xl border p-4" style="background: var(--bg-elev-1); border-color: var(--border)">
+    <div class="mb-3 flex items-center justify-between">
+      <div class="text-sm font-medium" style="color: var(--text)">差异结果</div>
+      <button id="compare" class="ui-btn ui-btn--primary" type="button">对比</button>
+    </div>
+    <div id="diff" class="overflow-auto rounded-xl border font-mono text-sm" style="border-color: var(--border)"></div>
+  </section>
+
+  <script is:inline>
+    const left = document.getElementById("left");
+    const right = document.getElementById("right");
+    const diff = document.getElementById("diff");
+    const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+    function lcs(a, b) {
+      const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+      for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      const out = [];
+      let i = 0, j = 0;
+      while (i < a.length || j < b.length) {
+        if (i < a.length && j < b.length && a[i] === b[j]) out.push([" ", a[i++], b[j++]]);
+        else if (j < b.length && (i === a.length || dp[i][j + 1] >= dp[i + 1][j])) out.push(["+", "", b[j++]]);
+        else out.push(["-", a[i++], ""]);
+      }
+      return out;
+    }
+    function render() {
+      const a = left.value.split("\n");
+      const b = right.value.split("\n");
+      diff.innerHTML = lcs(a, b).map(([type, oldLine, newLine]) => {
+        const bg = type === "+" ? "rgba(16,185,129,.16)" : type === "-" ? "rgba(239,68,68,.15)" : "var(--bg-elev-2)";
+        const text = type === "-" ? oldLine : newLine;
+        return `<div class="grid grid-cols-[44px_1fr] border-b px-3 py-1.5" style="border-color: var(--border); background: ${bg}; color: var(--text)"><span style="color: var(--text-muted)">${type}</span><span class="whitespace-pre">${esc(text)}</span></div>`;
+      }).join("");
+    }
+    document.getElementById("compare").addEventListener("click", render);
+    left.addEventListener("input", render);
+    right.addEventListener("input", render);
+    render();
+  </script>
+</ToolLayout>
